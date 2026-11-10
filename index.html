@@ -87,6 +87,8 @@ dialog::backdrop{background:#0007}
 body:not(.is-admin) .admin-only{display:none!important}
 body:not(.is-admin):not(.is-score) .score-only{display:none!important}
 body:not(.is-admin):not(.is-att) .att-only{display:none!important}
+body:not(.is-admin):not(.is-att) .staff-only{display:none!important}
+.w-ph{width:112px}
 input.ro{border-color:transparent;background:transparent;color:var(--ink)}
 select.ro{border-color:transparent;background:transparent;appearance:none;-webkit-appearance:none;opacity:1;color:var(--ink)}
 input.ro:focus{outline:none}
@@ -165,7 +167,7 @@ header .chip{background:#ffffff22;color:#fff}
 
   <section class="pane" id="pane-list">
     <div class="tools">
-      <input id="q" placeholder="Tìm tên / đơn vị…" oninput="renderList()" style="width:230px">
+      <input id="q" placeholder="Tìm tên / đơn vị / SĐT…" oninput="renderList()" style="width:230px">
       <select id="ft" onchange="renderList()"></select>
       <select id="fs" onchange="renderList()"></select>
       <button class="admin-only" onclick="addP()">+ Thêm VĐV</button>
@@ -175,7 +177,7 @@ header .chip{background:#ffffff22;color:#fff}
     <div class="tw"><table id="tbl">
       <thead><tr>
         <th class="c">STT</th><th class="c">Có mặt</th><th>Lane</th><th>Ca</th><th>Họ và tên</th><th>Đơn vị</th>
-        <th class="admin-only">Năm sinh</th><th class="score-only">Giới tính</th><th>Đội số</th>
+        <th class="staff-only">SĐT</th><th class="admin-only">Năm sinh</th><th class="score-only">Giới tính</th><th>Đội số</th>
         <th class="n score-only">Điểm ưu tiên</th><th class="score-only">GAME 1</th><th class="score-only">GAME 2</th>
         <th class="n score-only">Tổng điểm<br>(đã cộng ưu tiên)</th>
         <th class="c score-only">XH đội</th><th class="c score-only">XH cá nhân</th><th class="admin-only"></th>
@@ -246,7 +248,7 @@ header .chip{background:#ffffff22;color:#fff}
         <button onclick="$('f').click()">Khôi phục từ sao lưu</button>
         <input type="file" id="f" accept=".json" class="hide" onchange="restore(this)">
       </div>
-      <p class="note">File Excel nhập vào cần có các cột: HỌ VÀ TÊN, NĂM SINH, GIỚI TÍNH, ĐƠN VỊ, ĐỘI SỐ; tùy chọn: LANE, THỜI GIAN THI ĐẤU (ca), GAME 1, GAME 2, ĐIỂM DANH. Nhập mới sẽ <b>thay thế</b> toàn bộ danh sách đang có.</p>
+      <p class="note">File Excel nhập vào cần có các cột: HỌ VÀ TÊN, NĂM SINH, GIỚI TÍNH, ĐƠN VỊ, ĐỘI SỐ; tùy chọn: SĐT, LANE, THỜI GIAN THI ĐẤU (ca), GAME 1, GAME 2, ĐIỂM DANH. Nhập mới sẽ <b>thay thế</b> toàn bộ danh sách đang có.</p>
       <div class="btns" style="margin-top:6px">
         <button class="danger" onclick="clearField('att')">Xóa toàn bộ điểm danh</button>
         <button class="danger" onclick="clearField('score')">Xóa toàn bộ điểm GAME</button>
@@ -274,13 +276,14 @@ header .chip{background:#ffffff22;color:#fff}
    (Firebase Console → Project settings → Your apps → Web app → firebaseConfig)
    ===================================================================== */
 const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyBThUqmyaHne9iQDInFXwZig04x3zfF7fA",
+    apiKey: "AIzaSyBThUqmyaHne9iQDInFXwZig04x3zfF7fA",
   authDomain: "bowling-778b4.firebaseapp.com",
   projectId: "bowling-778b4",
   storageBucket: "bowling-778b4.firebasestorage.app",
   messagingSenderId: "41342759951",
   appId: "1:41342759951:web:04cb367d4d99bb14b15f7a",
   measurementId: "G-XSYN7FLE98"
+
 };
 const FB_VER = '10.14.1';
 
@@ -386,7 +389,7 @@ function writeAtt(list, v){
 function playerData(p, i){
   const y = num(p.year);
   return {id:i, name:String(p.name||''), unit:String(p.unit||''), year: y!=null && /^\d+$/.test(String(p.year).trim()) ? y : String(p.year||''),
-    gender:p.gender==='Nữ'?'Nữ':'Nam', team:String(p.team||''), lane:String(p.lane||''), shift:String(p.shift||''),
+    gender:p.gender==='Nữ'?'Nữ':'Nam', team:String(p.team||''), lane:String(p.lane||''), shift:String(p.shift||''), phone:String(p.phone||''),
     att:attVal(p.att), g1:num(p.g1), g2:num(p.g2)};
 }
 async function replacePlayers(list){
@@ -400,7 +403,7 @@ async function replacePlayers(list){
 function mapPlayer(d){
   const x = d.data();
   return {_doc:d.id, id:Number(x.id??d.id)||0, name:x.name||'', unit:x.unit||'', year:x.year==null?'':String(x.year),
-    gender:x.gender==='Nữ'?'Nữ':'Nam', team:x.team==null?'':String(x.team), lane:x.lane==null?'':String(x.lane), shift:x.shift||'',
+    gender:x.gender==='Nữ'?'Nữ':'Nam', team:x.team==null?'':String(x.team), lane:x.lane==null?'':String(x.lane), shift:x.shift||'', phone:x.phone==null?'':String(x.phone),
     att:x.att===true?true:x.att===false?false:undefined, g1:x.g1==null?'':String(x.g1), g2:x.g2==null?'':String(x.g2)};
 }
 function applyConfig(x){
@@ -523,6 +526,7 @@ function rowHTML(p){
     <td><input class="w-m" data-f="shift"></td>
     <td><input class="w-name" data-f="name"></td>
     <td><input class="w-unit" data-f="unit"></td>
+    <td class="staff-only"><input class="w-ph" data-f="phone" inputmode="tel"></td>
     <td class="admin-only"><input class="w-m" data-f="year" inputmode="numeric"></td>
     <td class="score-only"><select data-f="gender"><option>Nam</option><option>Nữ</option></select></td>
     <td><input class="w-s" data-f="team" inputmode="numeric"></td>
@@ -548,7 +552,7 @@ function patchRow(tr,p){
 let listSig = '';
 function renderList(){
   const q = $('q').value.trim().toLowerCase(), ft = $('ft').value, fs = $('fs').value;
-  const list = S.players.filter(p=>(!ft||String(p.team)===ft) && (!fs||p.shift===fs) && (!q || (p.name+' '+p.unit).toLowerCase().includes(q)));
+  const list = S.players.filter(p=>(!ft||String(p.team)===ft) && (!fs||p.shift===fs) && (!q || (p.name+' '+p.unit+(ROLE.admin||ROLE.att?' '+p.phone:'')).toLowerCase().includes(q)));
   const tb = $('tb'), sig = list.map(p=>p.id).join(',');
   if(sig!==listSig || !tb.children.length && list.length){ tb.innerHTML = list.map(rowHTML).join(''); listSig = sig; }
   const byId = {}; [...tb.children].forEach(tr=>byId[tr.dataset.id]=tr);
@@ -589,7 +593,7 @@ function renderAtt(){
       <span class="seg2"><button class="p${n===m.length?' on':''}" data-team="${esc(tid)}" data-s="1"${dis} title="Cả đội có mặt">Cả đội ✓</button><button class="a${v===m.length?' on':''}" data-team="${esc(tid)}" data-s="0"${dis} title="Cả đội vắng">Vắng</button></span></div>
       ${shown.map(p=>`<div class="m ${p.att===true?'on':p.att===false?'off':''}">
         <span style="flex:1"><span class="nm" style="font-weight:600">${esc(p.name)}</span>${units.length>1?`<small>${esc(p.unit)}</small>`:''}</span>
-        <span class="meta">${p.lane!==''?'Lane '+esc(p.lane):''}${p.shift?' · '+esc(p.shift.replace('g',':')):''}</span>
+        <span class="meta">${p.lane!==''?'Lane '+esc(p.lane):''}${p.shift?' · '+esc(p.shift.replace('g',':')):''}${p.phone?' · ☎ '+esc(p.phone):''}</span>
         <span class="seg2"><button class="p${p.att===true?' on':''}" data-pid="${p.id}" data-s="1"${dis}>Có mặt</button><button class="a${p.att===false?' on':''}" data-pid="${p.id}" data-s="0"${dis}>Vắng</button></span></div>`).join('')}</div>`;
   });
   $('attGrid').innerHTML = h || '<p class="empty">Không có VĐV phù hợp.</p>';
@@ -675,7 +679,7 @@ async function addRole(){
 
 /* ---------- Quản trị: dữ liệu ---------- */
 function backup(){
-  const o = {version:1, mode:S.mode, cfg:S.cfg, players:S.players.map(p=>({name:p.name,unit:p.unit,year:p.year,gender:p.gender,team:p.team,lane:p.lane,shift:p.shift,att:p.att===undefined?null:p.att,g1:p.g1,g2:p.g2}))};
+  const o = {version:1, mode:S.mode, cfg:S.cfg, players:S.players.map(p=>({name:p.name,unit:p.unit,year:p.year,gender:p.gender,team:p.team,lane:p.lane,shift:p.shift,phone:p.phone,att:p.att===undefined?null:p.att,g1:p.g1,g2:p.g2}))};
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([JSON.stringify(o)],{type:'application/json'}));
   a.download = 'bowling-backup.json'; a.click();
@@ -702,14 +706,14 @@ async function clearField(kind){
   if(await safe(()=>commit(S.players.map(p=>({t:'update',ref:pref(p),data}))))) toast('Đã xóa.',true);
 }
 function downloadTemplate(){
-  const csv = '﻿'+['STT','HỌ VÀ TÊN','NĂM SINH','GIỚI TÍNH','LANE','ĐƠN VỊ','ĐỘI SỐ','THỜI GIAN THI ĐẤU'].join(',')+'\r\n1,Nguyễn Văn A,1980,Nam,1,P. Ví dụ,1,09g00\r\n';
+  const csv = '﻿'+['STT','HỌ VÀ TÊN','NĂM SINH','GIỚI TÍNH','LANE','ĐƠN VỊ','ĐỘI SỐ','THỜI GIAN THI ĐẤU','SĐT'].join(',')+'\r\n1,Nguyễn Văn A,1980,Nam,1,P. Ví dụ,1,09g00,0901234567\r\n';
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})); a.download = 'mau-danh-sach-vdv.csv'; a.click();
 }
 function exportXLS(){
   compute();
   const row = a => '<tr>'+a.map(c=>`<td>${esc(c)}</td>`).join('')+'</tr>';
-  let h = '<h3>DANH SÁCH VĐV</h3><table border="1">'+row(['STT','Lane','Ca','Họ và tên','Đơn vị','Năm sinh','Giới tính','Đội số','Điểm ưu tiên','GAME 1','GAME 2','Tổng điểm (đã cộng ưu tiên)','Xếp hạng (theo đội)','Xếp hạng cá nhân','Điểm danh'])
-   + S.players.map((p,i)=>{const [rt,ri]=rankOf(p);return row([i+1,p.lane,p.shift,p.name,p.unit,p.year,p.gender,p.team,prio(p),fieldValue(p,'g1'),fieldValue(p,'g2'),absent(p)?0:hasScore(p)?total(p):'',rt,ri,p.att===true?'Có mặt':p.att===false?'Vắng':'']);}).join('')+'</table>';
+  let h = '<h3>DANH SÁCH VĐV</h3><table border="1">'+row(['STT','Lane','Ca','Họ và tên','Đơn vị',...(ROLE.admin?['SĐT']:[]),'Năm sinh','Giới tính','Đội số','Điểm ưu tiên','GAME 1','GAME 2','Tổng điểm (đã cộng ưu tiên)','Xếp hạng (theo đội)','Xếp hạng cá nhân','Điểm danh'])
+   + S.players.map((p,i)=>{const [rt,ri]=rankOf(p);return row([i+1,p.lane,p.shift,p.name,p.unit,...(ROLE.admin?[p.phone]:[]),p.year,p.gender,p.team,prio(p),fieldValue(p,'g1'),fieldValue(p,'g2'),absent(p)?0:hasScore(p)?total(p):'',rt,ri,p.att===true?'Có mặt':p.att===false?'Vắng':'']);}).join('')+'</table>';
   h += '<h3>XẾP HẠNG ĐỘI</h3><table border="1">'+row(['Hạng','Đội số','Đơn vị','Danh sách VĐV','Tổng điểm'])+R.teams.map(t=>row([t.rank,t.team,t.units.join(' / '),t.members.map(m=>m.name).join(', '),t.tot])).join('')+'</table>';
   ['Nữ','Nam'].forEach(g=>{ h += `<h3>XẾP HẠNG ${g.toUpperCase()}</h3><table border="1">`+row(['Hạng','Họ tên','Đơn vị','Đội số','Tổng điểm'])+R.ind[g].map(x=>row([x.rank,x.p.name,x.p.unit,x.p.team,x.tot])).join('')+'</table>'; });
   const blob = new Blob(['﻿<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="UTF-8"></head><body>'+h+'</body></html>'],{type:'application/vnd.ms-excel'});
@@ -805,7 +809,7 @@ function rowsToPlayers(rows){
   if(hi<0) return null;
   const H = rows[hi].map(norm);
   const col = (...names)=>{ for(const n of names){ const i=H.findIndex(h=>h===n||h.startsWith(n)); if(i>=0) return i; } return -1; };
-  const c = {lane:col('lane'),name:col('hovaten','hoten'),unit:col('donvi'),year:col('namsinh'),gender:col('gioitinh'),team:col('doiso'),shift:col('thoigian','ca'),g1:col('game1'),g2:col('game2'),att:col('diemdanh','comat')};
+  const c = {lane:col('lane'),name:col('hovaten','hoten'),unit:col('donvi'),year:col('namsinh'),gender:col('gioitinh'),team:col('doiso'),shift:col('thoigian','ca'),phone:col('sdt','sodienthoai','dienthoai','phone','tel'),g1:col('game1'),g2:col('game2'),att:col('diemdanh','comat')};
   if(c.team<0) return null;
   const get=(x,k)=>c[k]>=0?String(x[c[k]]??'').replace(/ /g,' ').trim():'';
   const clean = v => /^-?\d+\.0+$/.test(v)? v.replace(/\.0+$/,'') : v;
@@ -817,7 +821,8 @@ function rowsToPlayers(rows){
     const att = (TRUE.includes(a)||get(x,'att')==='✓') ? true : FALSE.includes(a) ? false : undefined;
     let g1 = okScore(clean(get(x,'g1'))), g2 = okScore(clean(get(x,'g2')));
     if(g1===null){ g1=''; rowsToPlayers.bad++; } if(g2===null){ g2=''; rowsToPlayers.bad++; }
-    return {name:get(x,'name'),unit:get(x,'unit'),year:clean(get(x,'year')),gender:(g==='nu'||g==='f'||g==='female')?'Nữ':'Nam',team:clean(get(x,'team')),lane:clean(get(x,'lane')),shift:get(x,'shift'),g1,g2,att};
+    let phone = get(x,'phone').replace(/[\s.\-()]/g,''); if(/^\d{9}$/.test(phone) && phone[0]!=='0') phone = '0'+phone;   // Excel làm mất số 0 đầu
+    return {phone,name:get(x,'name'),unit:get(x,'unit'),year:clean(get(x,'year')),gender:(g==='nu'||g==='f'||g==='female')?'Nữ':'Nam',team:clean(get(x,'team')),lane:clean(get(x,'lane')),shift:get(x,'shift'),g1,g2,att};
   });
 }
 async function importFile(inp){
