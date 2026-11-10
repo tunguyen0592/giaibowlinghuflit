@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Giải Bowling – Quản lý thi đấu</title>
+<style>
+:root{--bg:#f4f6fa;--card:#fff;--ink:#1c2433;--mut:#667085;--line:#dde3ec;--pri:#0b5ed7;--pri2:#e7f0ff;--ok:#12805c;--warn:#b54708;--warnbg:#fff4e5;--gold:#f5b301;--silver:#98a2b3;--bronze:#c2763a;--head:#17233d}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.45 "Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:var(--head);color:#fff;padding:14px 20px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+header h1{margin:0;font-size:20px;letter-spacing:.3px}
+header small{color:#b7c3dc;display:block;font-weight:400;font-size:12px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);padding:7px 13px;border-radius:7px}
+button:hover{background:#f0f3f8}
+button.pri{background:var(--pri);border-color:var(--pri);color:#fff;font-weight:600}
+button.pri:hover{background:#0a53bd}
+button.gold{background:var(--gold);border-color:var(--gold);color:#2b2100;font-weight:700}
+button.gold:hover{background:#e0a200}
+button.danger{color:#b42318}
+button.sm{padding:3px 8px;font-size:12px}
+nav{display:flex;gap:2px;padding:0 20px;background:#fff;border-bottom:1px solid var(--line);overflow-x:auto}
+nav button{border:0;border-bottom:3px solid transparent;border-radius:0;background:none;padding:12px 16px;white-space:nowrap;color:var(--mut);font-weight:600}
+nav button.on{color:var(--pri);border-bottom-color:var(--pri)}
+main{padding:16px 20px;max-width:1500px;margin:0 auto}
+.tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
+input,select{font:inherit;border:1px solid var(--line);border-radius:6px;padding:5px 7px;background:#fff;color:var(--ink);min-width:0}
+input:focus,select:focus{outline:2px solid var(--pri2);border-color:var(--pri)}
+.tw{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:auto;max-height:calc(100vh - 230px)}
+table{border-collapse:collapse;width:100%}
+th,td{padding:5px 7px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{position:sticky;top:0;background:#eef2f8;font-size:12px;text-transform:uppercase;letter-spacing:.2px;z-index:2;vertical-align:bottom}
+tbody tr:hover{background:#f8fafd}
+td.n,th.n{text-align:right}
+td.c,th.c{text-align:center}
+td input{width:100%}
+.w-name{min-width:200px}.w-unit{min-width:190px}.w-s{width:64px}.w-m{width:82px}
+.tot{font-weight:700;font-variant-numeric:tabular-nums}
+.stale .tot{color:#b0b8c6}
+.rk{display:inline-block;min-width:26px;text-align:center;border-radius:12px;padding:1px 7px;font-weight:700;background:#eef2f8}
+.rk.r1{background:var(--gold);color:#2b2100}.rk.r2{background:var(--silver);color:#fff}.rk.r3{background:var(--bronze);color:#fff}
+.notice{background:var(--warnbg);color:var(--warn);border:1px solid #f7d9a8;padding:8px 12px;border-radius:8px;margin-bottom:12px;display:none}
+.notice.show{display:block}
+.note{color:var(--mut);font-size:12.5px;margin:6px 0 12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.card h3{margin:0 0 4px;font-size:15px}
+.badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:10px;color:#fff;text-transform:uppercase;letter-spacing:.3px}
+.b1{background:var(--gold);color:#2b2100}.b2{background:var(--silver)}.b3{background:var(--bronze)}.bk{background:#0e7490}
+.sec{margin:22px 0 10px;font-size:17px;border-left:5px solid var(--pri);padding-left:10px}
+.big{font-size:22px;font-weight:800;color:var(--pri);font-variant-numeric:tabular-nums}
+.mem{margin:6px 0 0;padding:0;list-style:none;font-size:13px}
+.mem li{display:flex;justify-content:space-between;gap:10px;padding:2px 0;border-bottom:1px dashed var(--line)}
+.mem li.x{color:var(--mut);text-decoration:line-through}
+.meta{color:var(--mut);font-size:13px}
+.tie{color:var(--warn);font-size:12px;font-weight:600;margin-top:6px}
+.empty{color:var(--mut);font-style:italic}
+.hide{display:none}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:#b42318;color:#fff;padding:10px 18px;border-radius:8px;opacity:0;pointer-events:none;transition:.2s;z-index:50;max-width:90vw}
+#toast.show{opacity:1;transform:translateX(-50%)}
+input:disabled{background:#f1f3f7;color:#98a2b3}
+tr.abs{background:#fff4f2}
+.seg2{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;flex:none}
+.seg2 button{border:0;border-radius:0;padding:4px 10px;font-size:12px;background:#fff;color:var(--mut)}
+.seg2 button.p.on{background:var(--ok);color:#fff}.seg2 button.a.on{background:#d92d20;color:#fff}
+.vang{color:#b42318;font-size:11px;font-weight:700}
+.prog{height:10px;background:#e4e9f2;border-radius:6px;overflow:hidden;margin-bottom:8px}.prog div{height:100%;background:var(--ok);width:0;transition:width .25s}
+.ck{width:18px;height:18px;accent-color:var(--ok);cursor:pointer}
+.ac{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.ac.done{border-color:#7fd1b0}
+.ac .h{display:flex;align-items:center;gap:10px;padding:9px 12px;background:#eef2f8;font-weight:700}
+.ac.done .h{background:#dcf5ea}
+.ac .h .u{font-weight:400;font-size:12px;color:var(--mut);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ac .h label{display:flex;align-items:center;gap:6px;font-weight:600;font-size:12px;cursor:pointer;white-space:nowrap}
+.ac .m{display:flex;align-items:center;gap:10px;padding:9px 12px;border-top:1px solid var(--line);cursor:pointer}
+.ac .m:hover{background:#f8fafd}.ac .m.on{background:#effaf4}.ac .m.on .nm{color:var(--ok)}.ac .m.off{background:#fff4f2}.ac .m.off .nm{color:#b42318}
+.ac .m small{display:block;color:var(--mut)}
+dialog{border:1px solid var(--line);border-radius:12px;padding:18px 20px;width:min(520px,94vw);box-shadow:0 12px 40px #0004}
+dialog::backdrop{background:#0007}
+.cfgh{margin:14px 0 6px;font-size:13px;text-transform:uppercase;color:var(--mut);letter-spacing:.3px}
+.cfgrow{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.cfgrow input[type=number]{width:80px}
+.rule{display:flex;gap:8px;align-items:center;margin-bottom:6px}.rule input{width:90px}
+@media print{header,nav,.tools,.noprint,.notice{display:none!important}main{padding:0}.tw{max-height:none;border:0}.card{break-inside:avoid}body{background:#fff}.pane{display:block!important}#pane-list,#pane-team,#pane-ind{display:none!important}}
+
+body:not(.is-admin) .admin-only{display:none!important}
+body:not(.is-admin):not(.is-score) .score-only{display:none!important}
+body:not(.is-admin):not(.is-att) .att-only{display:none!important}
+input.ro{border-color:transparent;background:transparent;color:var(--ink)}
+select.ro{border-color:transparent;background:transparent;appearance:none;-webkit-appearance:none;opacity:1;color:var(--ink)}
+input.ro:focus{outline:none}
+#toast.ok{background:var(--ok)}
+.gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,#0b3a8f,#0b5ed7)}
+.gbox{background:#fff;border-radius:16px;padding:32px 28px;max-width:440px;width:100%;text-align:center;box-shadow:0 20px 60px #0005}
+.gbox h1{margin:0 0 6px;font-size:22px}.gbox p{color:var(--mut);margin:8px 0 18px}
+.gbox .gbtn{font-size:16px;padding:12px 22px;display:inline-flex;gap:10px;align-items:center}
+.gbox ol{text-align:left;color:var(--ink);font-size:14px;margin:10px 0 0;padding-left:20px}
+.gbox code{background:#eef2f8;padding:1px 5px;border-radius:4px}
+.hide{display:none!important}
+.who{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.who .em{color:#cfe0ff;font-size:13px}
+.chip{display:inline-block;background:#e8f0ff;color:var(--pri);border-radius:10px;padding:1px 9px;font-size:11px;font-weight:700}
+header .chip{background:#ffffff22;color:#fff}
+.spin{width:34px;height:34px;border:4px solid #dbe3ef;border-top-color:var(--pri);border-radius:50%;animation:sp 1s linear infinite;margin:10px auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+.adm{display:grid;gap:18px}
+.adm .card h3{margin-bottom:10px}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.rform{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
+.rform input[type=email],.rform input[type=text]{min-width:210px}
+.rform label{display:flex;align-items:center;gap:5px}
+</style>
+</head>
+<body>
+
+<!-- ============ MÀN HÌNH ĐĂNG NHẬP / THÔNG BÁO ============ -->
+<div id="gate" class="gate">
+  <div class="gbox">
+    <div data-g="loading"><div class="spin"></div><p>Đang tải…</p></div>
+    <div data-g="login" class="hide">
+      <h1>🎳 Giải Bowling</h1>
+      <p>Quản lý điểm danh, nhập điểm và xếp hạng.<br>Đăng nhập bằng tài khoản Google được ban tổ chức cấp quyền.</p>
+      <button class="pri gbtn" onclick="login()"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#fff" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/></svg> Đăng nhập với Google</button>
+    </div>
+    <div data-g="noperm" class="hide">
+      <h1>Chưa được cấp quyền</h1>
+      <p>Tài khoản <b id="npEmail"></b> chưa được ban tổ chức cấp quyền sử dụng.<br>Hãy gửi địa chỉ email này cho quản trị viên để được phân quyền, sau đó tải lại trang.</p>
+      <div class="btns" style="justify-content:center"><button onclick="location.reload()">Tải lại</button><button onclick="logout()">Đăng xuất / đổi tài khoản</button></div>
+    </div>
+    <div data-g="config" class="hide">
+      <h1>Chưa cấu hình Firebase</h1>
+      <p>Mở file <code>index.html</code>, tìm <code>FIREBASE_CONFIG</code> ở đầu phần script và dán thông số Firebase của bạn vào (xem file HUONG_DAN).</p>
+    </div>
+    <div data-g="neterr" class="hide">
+      <h1>Không kết nối được</h1>
+      <p>Không tải được thư viện Firebase. Hãy kiểm tra kết nối mạng rồi tải lại trang.</p>
+      <button onclick="location.reload()">Tải lại</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ỨNG DỤNG ============ -->
+<div id="app" class="hide">
+<header>
+  <h1>🎳 Giải Bowling – Quản lý thi đấu<small>Dữ liệu đồng bộ trực tuyến (Firebase)</small></h1>
+  <div class="bar">
+    <button class="pri score-only" onclick="calc(true)">Tính điểm</button>
+    <button class="gold score-only" onclick="judge()">🏆 XÉT GIẢI</button>
+    <button class="score-only" onclick="exportXLS()">Xuất Excel</button>
+    <div class="who" id="who"></div>
+    <button onclick="logout()">Đăng xuất</button>
+  </div>
+</header>
+<nav id="nav">
+  <button data-t="list" class="on">Danh sách VĐV</button>
+  <button data-t="att" class="att-only">Điểm danh</button>
+  <button data-t="team" class="score-only">Xếp hạng đội</button>
+  <button data-t="ind" class="score-only">Xếp hạng cá nhân</button>
+  <button data-t="award" class="score-only">Kết quả giải</button>
+  <button data-t="admin" class="admin-only">Quản trị</button>
+</nav>
+<main>
+  <div class="notice" id="empty">Chưa có danh sách VĐV. Vào tab <b>Quản trị</b> → <b>Nhập danh sách (Excel)</b> để nạp danh sách thi đấu.</div>
+
+  <section class="pane" id="pane-list">
+    <div class="tools">
+      <input id="q" placeholder="Tìm tên / đơn vị…" oninput="renderList()" style="width:230px">
+      <select id="ft" onchange="renderList()"></select>
+      <select id="fs" onchange="renderList()"></select>
+      <button class="admin-only" onclick="addP()">+ Thêm VĐV</button>
+      <span class="meta" id="cnt"></span>
+    </div>
+    <div class="note score-only"><span id="cfgtxt"></span> Tổng điểm = Điểm ưu tiên + GAME 1 + GAME 2. Điểm mỗi game từ 0 đến 300; VĐV vắng có tổng điểm 0.</div>
+    <div class="tw"><table id="tbl">
+      <thead><tr>
+        <th class="c">STT</th><th class="c">Có mặt</th><th>Lane</th><th>Ca</th><th>Họ và tên</th><th>Đơn vị</th>
+        <th class="admin-only">Năm sinh</th><th class="score-only">Giới tính</th><th>Đội số</th>
+        <th class="n score-only">Điểm ưu tiên</th><th class="score-only">GAME 1</th><th class="score-only">GAME 2</th>
+        <th class="n score-only">Tổng điểm<br>(đã cộng ưu tiên)</th>
+        <th class="c score-only">XH đội</th><th class="c score-only">XH cá nhân</th><th class="admin-only"></th>
+      </tr></thead>
+      <tbody id="tb"></tbody>
+    </table></div>
+  </section>
+
+  <section class="pane hide" id="pane-att">
+    <div class="tools">
+      <input id="aq" placeholder="Tìm tên / đơn vị / đội số…" oninput="renderAtt()" style="width:230px">
+      <select id="as" onchange="renderAtt()"><option value="">Tất cả VĐV</option><option value="no">Chưa điểm danh</option><option value="yes">Có mặt</option><option value="abs">Vắng</option></select>
+      <select id="ash" onchange="renderAtt()"></select>
+      <button class="pri" onclick="attAll(true)">Tất cả có mặt</button>
+      <button onclick="attAll(undefined)">Bỏ điểm danh tất cả</button>
+      <span class="meta" id="astat"></span>
+    </div>
+    <div class="prog"><div id="abar"></div></div>
+    <div class="note">Bấm <b>Có mặt</b> hoặc <b>Vắng</b> cho từng VĐV, hoặc <b>Cả đội ✓</b> / <b>Vắng</b> ở đầu mỗi đội (bấm lần nữa để bỏ chọn). VĐV <b>vắng</b> tự động có điểm 0 và không được xếp hạng cá nhân.</div>
+    <div class="grid" id="attGrid"></div>
+  </section>
+
+  <section class="pane hide" id="pane-team">
+    <div class="tools">
+      <label>Cách tính điểm đội:
+        <select id="mode" onchange="setMode(this.value)">
+          <option value="5">Cộng điểm 5 VĐV cao nhất của đội</option>
+          <option value="all">Cộng điểm tất cả VĐV của đội</option>
+        </select></label>
+    </div>
+    <div class="note">Đội có ít hơn 5 VĐV chỉ được cộng số VĐV hiện có. Chỉ xếp hạng các đội đã có ít nhất 1 điểm GAME. Chỉ admin được đổi cách tính.</div>
+    <div class="tw"><table><thead><tr><th class="c">Hạng</th><th class="c">Đội số</th><th>Đơn vị</th><th>Danh sách VĐV</th><th class="n">Số VĐV tính</th><th class="n">Tổng điểm đội</th></tr></thead><tbody id="tt"></tbody></table></div>
+  </section>
+
+  <section class="pane hide" id="pane-ind">
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(480px,1fr))">
+      <div><h3 class="sec">Nữ</h3><div class="tw"><table><thead><tr><th class="c">Hạng</th><th>Họ tên</th><th>Đơn vị</th><th class="c">Đội</th><th class="n">Tổng điểm</th></tr></thead><tbody id="ti-f"></tbody></table></div></div>
+      <div><h3 class="sec">Nam</h3><div class="tw"><table><thead><tr><th class="c">Hạng</th><th>Họ tên</th><th>Đơn vị</th><th class="c">Đội</th><th class="n">Tổng điểm</th></tr></thead><tbody id="ti-m"></tbody></table></div></div>
+    </div>
+  </section>
+
+  <section class="pane hide" id="pane-award">
+    <div class="tools noprint"><button class="gold" onclick="judge()">🏆 XÉT GIẢI</button><button onclick="window.print()">In kết quả</button></div>
+    <div id="awards"><p class="empty">Bấm <b>XÉT GIẢI</b> để xem kết quả.</p></div>
+  </section>
+
+  <section class="pane hide adm" id="pane-admin">
+    <div class="card">
+      <h3>Phân quyền tài khoản (Gmail)</h3>
+      <p class="note" style="margin-top:0">Nhập đúng địa chỉ Google mà người dùng dùng để đăng nhập. <b>Điểm danh</b>: chỉ điểm danh. <b>Nhập điểm</b>: nhập GAME 1/2, tính điểm, xếp hạng, xét giải. <b>Admin</b>: toàn quyền.</p>
+      <div class="rform">
+        <input type="email" id="rEmail" placeholder="email@gmail.com"><input type="text" id="rName" placeholder="Tên / ghi chú (tùy chọn)">
+        <label><input type="checkbox" id="rAtt" class="ck"> Điểm danh</label>
+        <label><input type="checkbox" id="rScore" class="ck"> Nhập điểm</label>
+        <label><input type="checkbox" id="rAdmin" class="ck"> Admin</label>
+        <button class="pri" onclick="addRole()">Thêm / cập nhật</button>
+      </div>
+      <div class="tw" style="max-height:none"><table><thead><tr><th>Email</th><th>Tên / ghi chú</th><th class="c">Điểm danh</th><th class="c">Nhập điểm</th><th class="c">Admin</th><th></th></tr></thead><tbody id="rolesTb"></tbody></table></div>
+    </div>
+    <div class="card">
+      <h3>Dữ liệu giải đấu</h3>
+      <div class="btns">
+        <button class="pri" onclick="$('fc').click()" title="Nhập danh sách VĐV từ file Excel (.xlsx) hoặc .csv">Nhập danh sách (Excel / CSV)</button>
+        <input type="file" id="fc" accept=".xlsx,.xlsm,.csv,.html,.htm" class="hide" onchange="importFile(this)">
+        <button onclick="downloadTemplate()">Tải file CSV mẫu</button>
+        <button onclick="openCfg()">⚙ Cài đặt điểm ưu tiên</button>
+        <button onclick="backup()">Sao lưu (.json)</button>
+        <button onclick="$('f').click()">Khôi phục từ sao lưu</button>
+        <input type="file" id="f" accept=".json" class="hide" onchange="restore(this)">
+      </div>
+      <p class="note">File Excel nhập vào cần có các cột: HỌ VÀ TÊN, NĂM SINH, GIỚI TÍNH, ĐƠN VỊ, ĐỘI SỐ; tùy chọn: LANE, THỜI GIAN THI ĐẤU (ca), GAME 1, GAME 2, ĐIỂM DANH. Nhập mới sẽ <b>thay thế</b> toàn bộ danh sách đang có.</p>
+      <div class="btns" style="margin-top:6px">
+        <button class="danger" onclick="clearField('att')">Xóa toàn bộ điểm danh</button>
+        <button class="danger" onclick="clearField('score')">Xóa toàn bộ điểm GAME</button>
+      </div>
+    </div>
+  </section>
+</main>
+<dialog id="cfg"><form method="dialog" onsubmit="return false">
+  <h3 style="margin:0 0 10px">Cài đặt điểm ưu tiên</h3>
+  <h4 class="cfgh">Theo giới tính (cộng thêm)</h4>
+  <div class="cfgrow"><label>Nam: +<input type="number" step="any" id="gNam"></label><label>Nữ: +<input type="number" step="any" id="gNu"></label></div>
+  <h4 class="cfgh">Theo năm sinh</h4>
+  <p class="note" style="margin:0 0 6px">Xét từ trên xuống, VĐV khớp dòng đầu tiên thì nhận điểm của dòng đó (không cộng dồn giữa các dòng).</p>
+  <div id="rules"></div>
+  <button type="button" class="sm" onclick="addRule()">+ Thêm mức năm sinh</button>
+  <div class="cfgrow" style="margin-top:16px;justify-content:flex-end">
+    <button type="button" onclick="defCfg()">Mặc định</button>
+    <button type="button" onclick="document.getElementById('cfg').close()">Hủy</button>
+    <button type="button" class="pri" onclick="saveCfg()">Lưu &amp; tính lại</button>
+  </div></form></dialog>
+</div>
+<script>
+/* =====================================================================
+   1) CẤU HÌNH FIREBASE  –  dán thông số Firebase của bạn vào đây
+   (Firebase Console → Project settings → Your apps → Web app → firebaseConfig)
+   ===================================================================== */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBThUqmyaHne9iQDInFXwZig04x3zfF7fA",
+  authDomain: "bowling-778b4.firebaseapp.com",
+  projectId: "bowling-778b4",
+  storageBucket: "bowling-778b4.firebasestorage.app",
+  messagingSenderId: "41342759951",
+  appId: "1:41342759951:web:04cb367d4d99bb14b15f7a",
+  measurementId: "G-XSYN7FLE98"
+};
+const FB_VER = '10.14.1';
+
+/* ---------- Trạng thái ---------- */
+let S = {players: [], mode: '5', cfg: null, roles: [], loaded: false};
+let R = null;                         // kết quả tính điểm
+let ROLE = {admin:false, att:false, score:false};
+let USER = null, FB = null, db = null, auth = null;
+let unsub = {}, bootTried = false, awardsOpen = false;
+const $ = id => document.getElementById(id);
+const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const num = v => { if(v===''||v==null) return null; const n = Number(String(v).replace(',','.')); return isFinite(n)?n:null; };
+const fmt = n => Number.isInteger(n)?String(n):n.toFixed(1);
+const DEF_CFG = {gender:{'Nam':0,'Nữ':7}, rules:[{op:'<=',year:1966,pts:7},{op:'<=',year:1976,pts:5}]};
+const MAXG = 300;
+function ensureCfg(){ const c = S.cfg; if(!c || !c.gender || !Array.isArray(c.rules)) S.cfg = JSON.parse(JSON.stringify(DEF_CFG)); }
+ensureCfg();
+function prio(p){
+  const c = S.cfg, y = num(p.year); let s = Number(c.gender[p.gender])||0;
+  if(y!=null){ const r = c.rules.find(r=>r.op==='>=' ? y>=r.year : y<=r.year); if(r) s += Number(r.pts)||0; }
+  return s;
+}
+function cfgText(){
+  const c = S.cfg, parts = c.rules.map(r=>`sinh ${r.op==='>='?'≥':'≤'} ${r.year}: +${r.pts}`);
+  const g = ['Nam','Nữ'].filter(k=>Number(c.gender[k])).map(k=>`${k} +${c.gender[k]}`);
+  return 'Điểm ưu tiên tự tính ('+(parts.concat(g).join('; ')||'không có ưu tiên')+(c.rules.length?'; năm sinh lấy mức đầu tiên khớp, cộng thêm điểm giới tính':'')+').';
+}
+const absent = p => p.att===false;
+const hasScore = p => !absent(p) && (num(p.g1)!=null || num(p.g2)!=null);
+const total = p => absent(p) ? 0 : prio(p) + (num(p.g1)||0) + (num(p.g2)||0);
+function toast(msg, ok){
+  let d = $('toast'); if(!d){ d = document.createElement('div'); d.id='toast'; document.body.appendChild(d); }
+  d.textContent = msg; d.classList.toggle('ok',!!ok); d.classList.add('show'); clearTimeout(d._t); d._t = setTimeout(()=>d.classList.remove('show'),3500);
+}
+
+/* ---------- Tính điểm & xếp hạng ---------- */
+function rankDesc(items, key){
+  items.sort((a,b)=>b[key]-a[key]);
+  items.forEach((it,i)=>{ it.rank = (i>0 && it[key]===items[i-1][key]) ? items[i-1].rank : i+1; });
+  return items;
+}
+function compute(){
+  const P = S.players.map(p=>({p, tot: total(p), scored: hasScore(p)}));
+  const ind = {};
+  ['Nữ','Nam'].forEach(g=>{ ind[g] = rankDesc(P.filter(x=>x.scored && x.p.gender===g).map(x=>({p:x.p, tot:x.tot})), 'tot'); });
+  const byTeam = {};
+  S.players.forEach(p=>{ const t = String(p.team||'').trim(); if(!t) return; (byTeam[t] = byTeam[t]||[]).push(p); });
+  const teams = [];
+  Object.keys(byTeam).forEach(t=>{
+    const m = byTeam[t];
+    if(!m.some(hasScore)) return;
+    const sorted = m.slice().sort((a,b)=>total(b)-total(a));
+    const n = S.mode==='all' ? sorted.length : 5;
+    const counted = new Set(sorted.slice(0,n).map(x=>x.id));
+    const sum = sorted.slice(0,n).reduce((s,x)=>s+total(x),0);
+    const units = [...new Set(m.map(x=>x.unit))];
+    teams.push({team:t, members:m, counted, tot:sum, units, missing:m.filter(x=>!hasScore(x)&&!absent(x)).length});
+  });
+  rankDesc(teams,'tot');
+  R = {ind, teams};
+}
+function calc(show){ compute(); refreshViews(); if(show) toast('Đã tính lại điểm và xếp hạng.',true); }
+
+/* ---------- Quyền ---------- */
+const canScore = () => ROLE.admin || ROLE.score;
+function canEdit(f,p){
+  if(f==='att') return ROLE.admin || ROLE.att;
+  if(f==='g1'||f==='g2') return canScore() && !absent(p);
+  return ROLE.admin;
+}
+function applyRoleUI(){
+  const b = document.body.classList;
+  b.toggle('is-admin',ROLE.admin); b.toggle('is-score',ROLE.score); b.toggle('is-att',ROLE.att);
+  const chips = [ROLE.admin&&'Admin',ROLE.att&&'Điểm danh',ROLE.score&&'Nhập điểm'].filter(Boolean);
+  $('who').innerHTML = `<span class="em">${esc(USER?USER.email:'')}</span>`+chips.map(c=>`<span class="chip">${c}</span>`).join('');
+  $('mode').disabled = !ROLE.admin;
+  const cur = document.querySelector('#nav button.on');
+  if(!cur || getComputedStyle(cur).display==='none') showTab('list');
+}
+
+/* ---------- Ghi dữ liệu lên Firestore ---------- */
+function errMsg(e){
+  if(e && (e.code==='permission-denied' || /permission/i.test(e.message||''))) return 'Bạn không có quyền thực hiện thao tác này.';
+  return 'Lỗi lưu dữ liệu: '+(e&&e.message||e);
+}
+async function commit(ops){                          // ops: {t:'set'|'update'|'delete', ref, data}
+  for(let i=0;i<ops.length;i+=400){
+    const b = FB.writeBatch(db);
+    ops.slice(i,i+400).forEach(o=>{ if(o.t==='set') b.set(o.ref,o.data); else if(o.t==='update') b.update(o.ref,o.data); else b.delete(o.ref); });
+    await b.commit();
+  }
+}
+const pref = p => FB.doc(db,'players',p._doc);
+const pad = n => String(n).padStart(4,'0');
+async function safe(fn){ try{ await fn(); return true; }catch(e){ console.error(e); toast(errMsg(e)); refreshViews(); return false; } }
+const attVal = v => v===true?true:v===false?false:null;
+function writeAtt(list, v){
+  const val = attVal(v);
+  const ops = list.filter(p=>attVal(p.att)!==val).map(p=>({t:'update',ref:pref(p),data:{att:val}}));
+  if(!ops.length) return Promise.resolve(true);
+  return safe(()=>commit(ops));
+}
+function playerData(p, i){
+  const y = num(p.year);
+  return {id:i, name:String(p.name||''), unit:String(p.unit||''), year: y!=null && /^\d+$/.test(String(p.year).trim()) ? y : String(p.year||''),
+    gender:p.gender==='Nữ'?'Nữ':'Nam', team:String(p.team||''), lane:String(p.lane||''), shift:String(p.shift||''),
+    att:attVal(p.att), g1:num(p.g1), g2:num(p.g2)};
+}
+async function replacePlayers(list){
+  const ops = list.map((p,i)=>({t:'set',ref:FB.doc(db,'players',pad(i+1)),data:playerData(p,i+1)}));
+  const keep = new Set(list.map((_,i)=>pad(i+1)));
+  S.players.forEach(p=>{ if(!keep.has(p._doc)) ops.push({t:'delete',ref:pref(p)}); });
+  return safe(()=>commit(ops));
+}
+
+/* ---------- Đồng bộ dữ liệu ---------- */
+function mapPlayer(d){
+  const x = d.data();
+  return {_doc:d.id, id:Number(x.id??d.id)||0, name:x.name||'', unit:x.unit||'', year:x.year==null?'':String(x.year),
+    gender:x.gender==='Nữ'?'Nữ':'Nam', team:x.team==null?'':String(x.team), lane:x.lane==null?'':String(x.lane), shift:x.shift||'',
+    att:x.att===true?true:x.att===false?false:undefined, g1:x.g1==null?'':String(x.g1), g2:x.g2==null?'':String(x.g2)};
+}
+function applyConfig(x){
+  if(x && x.rules){ S.cfg = {gender:{'Nam':Number(x.genderNam)||0,'Nữ':Number(x.genderNu)||0}, rules:x.rules}; }
+  else S.cfg = JSON.parse(JSON.stringify(DEF_CFG));
+  S.mode = x && x.mode==='all' ? 'all' : '5';
+}
+let rq = 0;
+function scheduleRefresh(){ if(rq) return; rq = requestAnimationFrame(()=>{ rq = 0; compute(); refreshViews(); }); }
+function startData(){
+  if(!unsub.players){
+    unsub.players = FB.onSnapshot(FB.collection(db,'players'), snap=>{
+      S.players = snap.docs.map(mapPlayer).sort((a,b)=>a.id-b.id); S.loaded = true; scheduleRefresh();
+    }, e=>{ console.error(e); toast(errMsg(e)); });
+    unsub.config = FB.onSnapshot(FB.doc(db,'config','main'), snap=>{ applyConfig(snap.exists()?snap.data():null); scheduleRefresh(); }, e=>console.error(e));
+  }
+  if(ROLE.admin && !unsub.roles){
+    unsub.roles = FB.onSnapshot(FB.collection(db,'roles'), snap=>{
+      S.roles = snap.docs.map(d=>({email:d.id, ...d.data()})).sort((a,b)=>a.email.localeCompare(b.email)); renderAdmin();
+    }, e=>console.error(e));
+  } else if(!ROLE.admin && unsub.roles){ unsub.roles(); delete unsub.roles; S.roles = []; }
+}
+function stopData(){
+  Object.values(unsub).forEach(f=>{ try{ f(); }catch(e){} }); unsub = {};
+  S.players = []; S.roles = []; S.loaded = false;
+}
+
+/* ---------- Đăng nhập & phân quyền ---------- */
+function showGate(kind, extra){
+  $('app').classList.add('hide'); $('gate').classList.remove('hide');
+  document.querySelectorAll('#gate [data-g]').forEach(el=>el.classList.toggle('hide',el.dataset.g!==kind));
+  if(kind==='noperm') $('npEmail').textContent = USER?USER.email:'';
+}
+function enterApp(){
+  $('gate').classList.add('hide'); $('app').classList.remove('hide');
+  applyRoleUI(); startData(); compute(); refreshViews();
+}
+async function boot(){
+  if(/^DAN_/.test(FIREBASE_CONFIG.apiKey)){ showGate('config'); return; }
+  showGate('loading');
+  try{
+    const base = `https://www.gstatic.com/firebasejs/${FB_VER}/`;
+    const mods = await Promise.all(['firebase-app.js','firebase-auth.js','firebase-firestore.js'].map(f=>import(base+f)));
+    FB = Object.assign({}, ...mods);
+  }catch(e){ console.error(e); showGate('neterr'); return; }
+  const app = FB.initializeApp(FIREBASE_CONFIG); auth = FB.getAuth(app);
+  try{ db = FB.initializeFirestore(app,{localCache:FB.persistentLocalCache({tabManager:FB.persistentMultipleTabManager()})}); }
+  catch(e){ db = FB.getFirestore(app); }
+  FB.onAuthStateChanged(auth, onUser);
+}
+function onUser(user){
+  if(unsub.role){ unsub.role(); delete unsub.role; }
+  if(!user){ USER = null; stopData(); ROLE = {admin:false,att:false,score:false}; showGate('login'); return; }
+  USER = {email:(user.email||'').toLowerCase(), name:user.displayName||''}; bootTried = false;
+  showGate('loading');
+  const ref = FB.doc(db,'roles',USER.email);
+  unsub.role = FB.onSnapshot(ref, async snap=>{
+    if(!snap.exists()){
+      if(!bootTried){ bootTried = true;                    // thử tự tạo quyền admin (chỉ thành công với email admin đầu tiên trong Rules)
+        try{ await FB.setDoc(ref,{admin:true,attendance:false,scoring:false,name:USER.name}); return; }catch(e){}
+      }
+      ROLE = {admin:false,att:false,score:false}; stopData(); showGate('noperm'); return;
+    }
+    const d = snap.data();
+    ROLE = {admin:!!d.admin, att:!!d.attendance, score:!!d.scoring};
+    if(!(ROLE.admin||ROLE.att||ROLE.score)){ stopData(); showGate('noperm'); return; }
+    enterApp();
+  }, e=>{ console.error(e); showGate('noperm'); });
+}
+async function login(){
+  try{
+    const prov = new FB.GoogleAuthProvider(); prov.setCustomParameters({prompt:'select_account'});
+    await FB.signInWithPopup(auth, prov);
+  }catch(e){
+    console.error(e);
+    if(e && (e.code==='auth/popup-blocked' || e.code==='auth/cancelled-popup-request' )){ try{ await FB.signInWithRedirect(auth,new FB.GoogleAuthProvider()); }catch(_){} }
+    else if(e && e.code==='auth/unauthorized-domain') alert('Tên miền này chưa được thêm vào Firebase → Authentication → Settings → Authorized domains.');
+    else if(!e || e.code!=='auth/popup-closed-by-user') alert('Đăng nhập không thành công: '+(e&&e.message||e));
+  }
+}
+function logout(){ FB.signOut(auth); }
+
+/* ---------- Hiển thị ---------- */
+const rk = r => r? `<span class="rk ${r<=3?'r'+r:''}">${r}</span>` : '<span class="meta">—</span>';
+function refreshViews(){
+  ensureCfg();
+  $('cfgtxt').textContent = cfgText(); $('mode').value = S.mode;
+  $('empty').classList.toggle('show', S.loaded && !S.players.length && ROLE.admin);
+  renderFilter(); renderList(); renderTeam(); renderInd(); renderAtt(); renderAdmin();
+}
+function fillSel(id, first, vals, label){
+  const sel = $(id), cur = sel.value;
+  sel.innerHTML = `<option value="">${first}</option>` + vals.map(v=>`<option value="${esc(v)}">${label(v)}</option>`).join('');
+  sel.value = vals.includes(cur)?cur:'';
+}
+function renderFilter(){
+  const teams = [...new Set(S.players.map(p=>String(p.team)))].filter(x=>x!=='').sort((a,b)=>a-b);
+  const shifts = [...new Set(S.players.map(p=>p.shift))].filter(Boolean).sort();
+  fillSel('ft','Tất cả đội',teams,t=>'Đội '+esc(t));
+  fillSel('fs','Tất cả ca',shifts,s=>'Ca '+esc(s.replace('g',':')));
+  fillSel('ash','Tất cả ca',shifts,s=>'Ca '+esc(s.replace('g',':')));
+}
+function rankOf(p){
+  if(!R) return ['',''];
+  let ti = '', ii = '';
+  const t = R.teams.find(x=>x.members.includes(p)); if(t) ti = t.rank;
+  const g = R.ind[p.gender]; if(g){ const x = g.find(y=>y.p===p); if(x) ii = x.rank; }
+  return [ti,ii];
+}
+function fieldValue(p,f){
+  if(f==='att') return p.att===true?'1':p.att===false?'0':'';
+  if((f==='g1'||f==='g2') && absent(p)) return '0';
+  return String(p[f]??'');
+}
+function rowHTML(p){
+  return `<tr data-id="${p.id}">
+    <td class="c">${S.players.indexOf(p)+1}</td>
+    <td class="c"><select data-f="att"><option value="">—</option><option value="1">Có mặt</option><option value="0">Vắng</option></select></td>
+    <td><input class="w-s" data-f="lane"></td>
+    <td><input class="w-m" data-f="shift"></td>
+    <td><input class="w-name" data-f="name"></td>
+    <td><input class="w-unit" data-f="unit"></td>
+    <td class="admin-only"><input class="w-m" data-f="year" inputmode="numeric"></td>
+    <td class="score-only"><select data-f="gender"><option>Nam</option><option>Nữ</option></select></td>
+    <td><input class="w-s" data-f="team" inputmode="numeric"></td>
+    <td class="n score-only"><b class="pv"></b></td>
+    <td class="score-only"><input class="w-m" data-f="g1" inputmode="decimal"></td>
+    <td class="score-only"><input class="w-m" data-f="g2" inputmode="decimal"></td>
+    <td class="n score-only tc"></td><td class="c score-only rt"></td><td class="c score-only ri"></td>
+    <td class="admin-only"><button class="sm danger" data-del="1" title="Xóa VĐV">✕</button></td></tr>`;
+}
+function patchRow(tr,p){
+  tr.className = absent(p)?'abs':'';
+  tr.querySelectorAll('[data-f]').forEach(el=>{
+    const f = el.dataset.f, can = canEdit(f,p), v = fieldValue(p,f);
+    if(document.activeElement!==el && el.value!==v) el.value = v;
+    if(el.tagName==='SELECT') el.disabled = !can; else el.readOnly = !can;
+    el.classList.toggle('ro',!can); el.tabIndex = can?0:-1;
+  });
+  const [rt,ri] = rankOf(p);
+  tr.querySelector('.pv').textContent = prio(p);
+  tr.querySelector('.tc').innerHTML = absent(p) ? '<b class="tot">0</b> <span class="vang">Vắng</span>' : hasScore(p) ? `<b class="tot">${fmt(total(p))}</b>` : '<span class="meta">—</span>';
+  tr.querySelector('.rt').innerHTML = rk(rt); tr.querySelector('.ri').innerHTML = rk(ri);
+}
+let listSig = '';
+function renderList(){
+  const q = $('q').value.trim().toLowerCase(), ft = $('ft').value, fs = $('fs').value;
+  const list = S.players.filter(p=>(!ft||String(p.team)===ft) && (!fs||p.shift===fs) && (!q || (p.name+' '+p.unit).toLowerCase().includes(q)));
+  const tb = $('tb'), sig = list.map(p=>p.id).join(',');
+  if(sig!==listSig || !tb.children.length && list.length){ tb.innerHTML = list.map(rowHTML).join(''); listSig = sig; }
+  const byId = {}; [...tb.children].forEach(tr=>byId[tr.dataset.id]=tr);
+  list.forEach(p=>{ if(byId[p.id]) patchRow(byId[p.id],p); });
+  $('cnt').textContent = `${list.length}/${S.players.length} VĐV · có mặt ${S.players.filter(p=>p.att===true).length} · vắng ${S.players.filter(p=>p.att===false).length}`;
+}
+function renderTeam(){
+  const tb = $('tt');
+  if(!R||!R.teams.length){ tb.innerHTML='<tr><td colspan="6" class="empty">Chưa có điểm GAME nào được nhập.</td></tr>'; return; }
+  tb.innerHTML = R.teams.map(t=>`<tr><td class="c">${rk(t.rank)}</td><td class="c"><b>${esc(t.team)}</b></td><td>${esc(t.units.join(' / '))}</td>
+   <td style="white-space:normal">${t.members.map(m=>esc(m.name)).join(', ')}${t.missing?` <span class="tie">(${t.missing} VĐV chưa có điểm)</span>`:''}</td>
+   <td class="n">${t.counted.size}</td><td class="n"><b class="tot">${fmt(t.tot)}</b></td></tr>`).join('');
+}
+function renderInd(){
+  [['Nữ','ti-f'],['Nam','ti-m']].forEach(([g,id])=>{
+    const L = R && R.ind[g] || [];
+    $(id).innerHTML = L.length ? L.map(x=>`<tr><td class="c">${rk(x.rank)}</td><td>${esc(x.p.name)}</td><td>${esc(x.p.unit)}</td><td class="c">${esc(x.p.team)}</td><td class="n"><b class="tot">${fmt(x.tot)}</b></td></tr>`).join('') : '<tr><td colspan="5" class="empty">Chưa có điểm</td></tr>';
+  });
+}
+
+/* ---------- Điểm danh ---------- */
+function renderAtt(){
+  const q = norm($('aq').value.trim()), st = $('as').value, sh = $('ash').value, can = ROLE.admin||ROLE.att;
+  const all = S.players, pr = all.filter(p=>p.att===true).length, ab = all.filter(p=>p.att===false).length;
+  $('astat').textContent = `Có mặt ${pr} · Vắng ${ab} · Chưa điểm danh ${all.length-pr-ab} (tổng ${all.length})`;
+  $('abar').style.width = (all.length?(pr+ab)*100/all.length:0)+'%';
+  const stOf = p => p.att===true?'yes':p.att===false?'abs':'no';
+  const match = p => (!q || norm(p.name+' '+p.unit+' doi '+p.team).includes(q)) && (!st || stOf(p)===st) && (!sh || p.shift===sh);
+  const teams = {}; all.forEach(p=>{ (teams[p.team]=teams[p.team]||[]).push(p); });
+  const ids = Object.keys(teams).sort((a,b)=>(+a)-(+b)||String(a).localeCompare(b));
+  let h = '';
+  const dis = can?'':' disabled';
+  ids.forEach(tid=>{
+    const m = teams[tid], shown = m.filter(match); if(!shown.length) return;
+    const n = m.filter(p=>p.att===true).length, v = m.filter(p=>p.att===false).length, units = [...new Set(m.map(p=>p.unit))];
+    h += `<div class="ac ${n===m.length?'done':''}"><div class="h"><span>Đội ${esc(tid)}</span><span class="u" title="${esc(units.join(' / '))}">${esc(units.join(' / '))}</span>
+      <span class="meta">${n}/${m.length}${v?` · vắng ${v}`:''}</span>
+      <span class="seg2"><button class="p${n===m.length?' on':''}" data-team="${esc(tid)}" data-s="1"${dis} title="Cả đội có mặt">Cả đội ✓</button><button class="a${v===m.length?' on':''}" data-team="${esc(tid)}" data-s="0"${dis} title="Cả đội vắng">Vắng</button></span></div>
+      ${shown.map(p=>`<div class="m ${p.att===true?'on':p.att===false?'off':''}">
+        <span style="flex:1"><span class="nm" style="font-weight:600">${esc(p.name)}</span>${units.length>1?`<small>${esc(p.unit)}</small>`:''}</span>
+        <span class="meta">${p.lane!==''?'Lane '+esc(p.lane):''}${p.shift?' · '+esc(p.shift.replace('g',':')):''}</span>
+        <span class="seg2"><button class="p${p.att===true?' on':''}" data-pid="${p.id}" data-s="1"${dis}>Có mặt</button><button class="a${p.att===false?' on':''}" data-pid="${p.id}" data-s="0"${dis}>Vắng</button></span></div>`).join('')}</div>`;
+  });
+  $('attGrid').innerHTML = h || '<p class="empty">Không có VĐV phù hợp.</p>';
+}
+$('attGrid').addEventListener('click',e=>{
+  const b = e.target.closest('button[data-s]'); if(!b || b.disabled) return;
+  const want = b.dataset.s==='1';
+  if(b.dataset.team!==undefined){
+    const m = S.players.filter(p=>String(p.team)===b.dataset.team), same = m.every(p=>p.att===want);
+    writeAtt(m, same?undefined:want);
+  } else {
+    const p = S.players.find(x=>x.id==b.dataset.pid); if(!p) return;
+    writeAtt([p], p.att===want?undefined:want);
+  }
+});
+async function attAll(v){
+  if(!confirm(v===true?'Đánh dấu CÓ MẶT cho tất cả VĐV?':v===false?'Đánh dấu VẮNG cho tất cả VĐV? (điểm của họ sẽ về 0)':'Bỏ trạng thái điểm danh của tất cả VĐV?')) return;
+  await writeAtt(S.players, v);
+}
+
+/* ---------- Bảng danh sách: sửa dữ liệu ---------- */
+$('tb').addEventListener('change',async e=>{
+  const el = e.target, tr = el.closest('tr'); if(!tr||!el.dataset.f) return;
+  const p = S.players.find(x=>x.id==tr.dataset.id), f = el.dataset.f; if(!p) return;
+  if(!canEdit(f,p)){ el.value = fieldValue(p,f); return; }
+  if(f==='att'){ await writeAtt([p], el.value==='1'?true:el.value==='0'?false:undefined); return; }
+  let val;
+  if(f==='g1'||f==='g2'){
+    const raw = el.value.trim();
+    if(raw===''){ val = null; }
+    else{
+      const v = num(raw);
+      if(v==null || v<0 || v>MAXG){ toast(`Điểm mỗi game phải từ 0 đến ${MAXG}.`); el.value = fieldValue(p,f); el.focus(); return; }
+      val = v;
+    }
+  } else if(f==='year'){ const s = el.value.trim(); val = /^\d+$/.test(s)?Number(s):s; }
+  else val = el.value.trim();
+  const ok = await safe(()=>FB.updateDoc(pref(p),{[f]:val}));
+  if(!ok) el.value = fieldValue(p,f);
+});
+$('tb').addEventListener('click',async e=>{
+  if(!e.target.dataset.del) return;
+  const p = S.players.find(x=>x.id==e.target.closest('tr').dataset.id);
+  if(p && confirm(`Xóa VĐV "${p.name}"?`)) await safe(()=>FB.deleteDoc(pref(p)));
+});
+async function addP(){
+  const id = S.players.reduce((m,p)=>Math.max(m,p.id),0)+1;
+  const ok = await safe(()=>FB.setDoc(FB.doc(db,'players',pad(id)),playerData({name:'VĐV mới',gender:'Nam',team:$('ft').value,shift:$('fs').value},id)));
+  if(ok){ const w = document.querySelector('#pane-list .tw'); setTimeout(()=>w.scrollTop = w.scrollHeight,300); }
+}
+async function setMode(v){ await safe(()=>FB.setDoc(FB.doc(db,'config','main'),{mode:v},{merge:true})); }
+
+/* ---------- Quản trị: phân quyền ---------- */
+function renderAdmin(){
+  if(!ROLE.admin) return;
+  const me = USER?USER.email:'';
+  $('rolesTb').innerHTML = S.roles.length ? S.roles.map(r=>`<tr data-em="${esc(r.email)}">
+    <td>${esc(r.email)}${r.email===me?' <span class="chip">bạn</span>':''}</td><td>${esc(r.name||'')}</td>
+    <td class="c"><input type="checkbox" class="ck" data-k="attendance"${r.attendance?' checked':''}></td>
+    <td class="c"><input type="checkbox" class="ck" data-k="scoring"${r.scoring?' checked':''}></td>
+    <td class="c"><input type="checkbox" class="ck" data-k="admin"${r.admin?' checked':''}${r.email===me?' disabled title="Không thể tự bỏ quyền admin của chính mình"':''}></td>
+    <td>${r.email===me?'':'<button class="sm danger" data-delrole="1">Xóa</button>'}</td></tr>`).join('')
+    : '<tr><td colspan="6" class="empty">Chưa có tài khoản nào.</td></tr>';
+}
+$('rolesTb').addEventListener('change',e=>{
+  const k = e.target.dataset.k, em = e.target.closest('tr').dataset.em; if(!k) return;
+  safe(()=>FB.updateDoc(FB.doc(db,'roles',em),{[k]:e.target.checked}));
+});
+$('rolesTb').addEventListener('click',e=>{
+  if(!e.target.dataset.delrole) return;
+  const em = e.target.closest('tr').dataset.em;
+  if(confirm(`Xóa quyền của ${em}?`)) safe(()=>FB.deleteDoc(FB.doc(db,'roles',em)));
+});
+async function addRole(){
+  const em = $('rEmail').value.trim().toLowerCase();
+  if(!/^[^\s@\/]+@[^\s@\/]+\.[^\s@\/]+$/.test(em)){ toast('Email không hợp lệ.'); return; }
+  const data = {name:$('rName').value.trim(), attendance:$('rAtt').checked, scoring:$('rScore').checked, admin:$('rAdmin').checked};
+  if(!data.attendance && !data.scoring && !data.admin){ toast('Hãy chọn ít nhất một quyền.'); return; }
+  if(await safe(()=>FB.setDoc(FB.doc(db,'roles',em),data,{merge:true}))){
+    $('rEmail').value = ''; $('rName').value = ''; $('rAtt').checked = $('rScore').checked = $('rAdmin').checked = false; toast('Đã lưu phân quyền cho '+em,true);
+  }
+}
+
+/* ---------- Quản trị: dữ liệu ---------- */
+function backup(){
+  const o = {version:1, mode:S.mode, cfg:S.cfg, players:S.players.map(p=>({name:p.name,unit:p.unit,year:p.year,gender:p.gender,team:p.team,lane:p.lane,shift:p.shift,att:p.att===undefined?null:p.att,g1:p.g1,g2:p.g2}))};
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(o)],{type:'application/json'}));
+  a.download = 'bowling-backup.json'; a.click();
+}
+function restore(inp){
+  const f = inp.files[0]; if(!f) return; inp.value='';
+  const r = new FileReader();
+  r.onload = async ()=>{
+    try{
+      const o = JSON.parse(r.result); if(!Array.isArray(o.players)) throw 0;
+      if(!confirm(`Khôi phục ${o.players.length} VĐV từ file sao lưu? Dữ liệu hiện tại sẽ bị thay thế.`)) return;
+      if(await replacePlayers(o.players) && o.cfg){
+        await safe(()=>FB.setDoc(FB.doc(db,'config','main'),{genderNam:Number(o.cfg.gender['Nam'])||0,genderNu:Number(o.cfg.gender['Nữ'])||0,rules:o.cfg.rules,mode:o.mode==='all'?'all':'5'}));
+      }
+      toast('Đã khôi phục dữ liệu.',true);
+    }catch(e){ alert('File sao lưu không hợp lệ.'); }
+  };
+  r.readAsText(f);
+}
+async function clearField(kind){
+  const msg = kind==='att' ? 'Xóa TRẠNG THÁI ĐIỂM DANH của tất cả VĐV?' : 'Xóa TOÀN BỘ điểm GAME 1 và GAME 2 của tất cả VĐV?';
+  if(!confirm(msg)) return;
+  const data = kind==='att' ? {att:null} : {g1:null,g2:null};
+  if(await safe(()=>commit(S.players.map(p=>({t:'update',ref:pref(p),data}))))) toast('Đã xóa.',true);
+}
+function downloadTemplate(){
+  const csv = '﻿'+['STT','HỌ VÀ TÊN','NĂM SINH','GIỚI TÍNH','LANE','ĐƠN VỊ','ĐỘI SỐ','THỜI GIAN THI ĐẤU'].join(',')+'\r\n1,Nguyễn Văn A,1980,Nam,1,P. Ví dụ,1,09g00\r\n';
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})); a.download = 'mau-danh-sach-vdv.csv'; a.click();
+}
+function exportXLS(){
+  compute();
+  const row = a => '<tr>'+a.map(c=>`<td>${esc(c)}</td>`).join('')+'</tr>';
+  let h = '<h3>DANH SÁCH VĐV</h3><table border="1">'+row(['STT','Lane','Ca','Họ và tên','Đơn vị','Năm sinh','Giới tính','Đội số','Điểm ưu tiên','GAME 1','GAME 2','Tổng điểm (đã cộng ưu tiên)','Xếp hạng (theo đội)','Xếp hạng cá nhân','Điểm danh'])
+   + S.players.map((p,i)=>{const [rt,ri]=rankOf(p);return row([i+1,p.lane,p.shift,p.name,p.unit,p.year,p.gender,p.team,prio(p),fieldValue(p,'g1'),fieldValue(p,'g2'),absent(p)?0:hasScore(p)?total(p):'',rt,ri,p.att===true?'Có mặt':p.att===false?'Vắng':'']);}).join('')+'</table>';
+  h += '<h3>XẾP HẠNG ĐỘI</h3><table border="1">'+row(['Hạng','Đội số','Đơn vị','Danh sách VĐV','Tổng điểm'])+R.teams.map(t=>row([t.rank,t.team,t.units.join(' / '),t.members.map(m=>m.name).join(', '),t.tot])).join('')+'</table>';
+  ['Nữ','Nam'].forEach(g=>{ h += `<h3>XẾP HẠNG ${g.toUpperCase()}</h3><table border="1">`+row(['Hạng','Họ tên','Đơn vị','Đội số','Tổng điểm'])+R.ind[g].map(x=>row([x.rank,x.p.name,x.p.unit,x.p.team,x.tot])).join('')+'</table>'; });
+  const blob = new Blob(['﻿<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="UTF-8"></head><body>'+h+'</body></html>'],{type:'application/vnd.ms-excel'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'ket-qua-bowling.xls'; a.click();
+}
+
+/* ---------- Tabs ---------- */
+function showTab(t){
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+  document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('hide',p.id!=='pane-'+t));
+}
+$('nav').addEventListener('click',e=>{ const t=e.target.dataset.t; if(t) showTab(t); });
+/* ---------- Nhập CSV ---------- */
+function parseCSV(text){
+  text = text.replace(/^\uFEFF/,'');
+  const first = text.split(/\r?\n/)[0]||'';
+  const d = (first.split(';').length>first.split(',').length)?';':(first.split('\t').length>first.split(',').length?'\t':',');
+  const rows=[]; let row=[], cur='', q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){cur+='"';i++;} else q=false; } else cur+=c; }
+    else if(c==='"') q=true;
+    else if(c===d){ row.push(cur); cur=''; }
+    else if(c==='\n'||c==='\r'){ if(c==='\r'&&text[i+1]==='\n') i++; row.push(cur); cur=''; if(row.some(x=>x.trim()!=='')) rows.push(row); row=[]; }
+    else cur+=c;
+  }
+  row.push(cur); if(row.some(x=>x.trim()!=='')) rows.push(row);
+  return rows;
+}
+const norm = s => String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/gi,'d').toLowerCase().replace(/[^a-z0-9]/g,'');
+/* --- Đọc file .xlsx (không cần thư viện ngoài) --- */
+async function inflateRaw(u8){
+  const ds = new DecompressionStream('deflate-raw');
+  const w = ds.writable.getWriter(); w.write(u8); w.close();
+  return new Uint8Array(await new Response(ds.readable).arrayBuffer());
+}
+async function unzip(buf){
+  const u8 = new Uint8Array(buf), dv = new DataView(buf), td = new TextDecoder();
+  let e = u8.length-22; while(e>=0 && dv.getUint32(e,true)!==0x06054b50) e--;
+  if(e<0) throw new Error('File Excel không hợp lệ.');
+  const n = dv.getUint16(e+10,true); let p = dv.getUint32(e+16,true); const files = {};
+  for(let i=0;i<n;i++){
+    if(dv.getUint32(p,true)!==0x02014b50) break;
+    const method=dv.getUint16(p+10,true), csize=dv.getUint32(p+20,true), nl=dv.getUint16(p+28,true), xl=dv.getUint16(p+30,true), cl=dv.getUint16(p+32,true), off=dv.getUint32(p+42,true);
+    const name = td.decode(u8.subarray(p+46,p+46+nl));
+    files[name] = {method,csize,off};
+    p += 46+nl+xl+cl;
+  }
+  const read = async name=>{
+    const f = files[name]; if(!f) return null;
+    const ln = dv.getUint16(f.off+26,true), lx = dv.getUint16(f.off+28,true), s = f.off+30+ln+lx;
+    const raw = u8.subarray(s,s+f.csize);
+    return td.decode(f.method===0 ? raw : await inflateRaw(raw));
+  };
+  return {read, has:n=>!!files[n]};
+}
+const colIdx = ref => { let n=0; for(const ch of ref.replace(/[0-9]/g,'')) n = n*26 + ch.charCodeAt(0)-64; return n-1; };
+async function readXlsx(buf){
+  const z = await unzip(buf), P = new DOMParser();
+  const xml = async n=>{ const s = await z.read(n); return s ? P.parseFromString(s,'application/xml') : null; };
+  const wb = await xml('xl/workbook.xml'), rel = await xml('xl/_rels/workbook.xml.rels');
+  if(!wb||!rel) throw new Error('Không đọc được cấu trúc file Excel.');
+  const targets = {}; [...rel.getElementsByTagName('Relationship')].forEach(r=>targets[r.getAttribute('Id')] = r.getAttribute('Target'));
+  const ss = await xml('xl/sharedStrings.xml');
+  const strs = ss ? [...ss.getElementsByTagName('si')].map(si=>[...si.getElementsByTagName('t')].filter(t=>!t.parentNode.nodeName.match(/rPh/)).map(t=>t.textContent).join('')) : [];
+  const sheets = [];
+  for(const sh of wb.getElementsByTagName('sheet')){
+    let tg = targets[sh.getAttribute('r:id')] || ''; tg = tg.replace(/^\/?(xl\/)?/,'');
+    const doc = await xml('xl/'+tg); if(!doc) continue;
+    const rows = [];
+    for(const rw of doc.getElementsByTagName('row')){
+      const arr = [];
+      for(const c of rw.getElementsByTagName('c')){
+        const t = c.getAttribute('t'), v = c.getElementsByTagName('v')[0];
+        let val = '';
+        if(t==='inlineStr') val = [...c.getElementsByTagName('t')].map(x=>x.textContent).join('');
+        else if(v){ val = t==='s' ? (strs[+v.textContent]??'') : v.textContent; }
+        arr[colIdx(c.getAttribute('r')||'A1')] = val;
+      }
+      rows[(+rw.getAttribute('r')||rows.length+1)-1] = arr;
+    }
+    sheets.push({name:sh.getAttribute('name'), rows:Array.from(rows,r=>r||[])});
+  }
+  return sheets;
+}
+function readHtmlTable(text){
+  const doc = new DOMParser().parseFromString(text,'text/html');
+  return [...doc.querySelectorAll('table')].map((tb,i)=>({name:'Bảng '+(i+1), rows:[...tb.rows].map(r=>[...r.cells].map(c=>c.textContent))}));
+}
+/* --- Chuyển bảng dữ liệu thành danh sách VĐV --- */
+function rowsToPlayers(rows){
+  let hi = rows.findIndex((r,i)=>i<15 && r.some(c=>norm(c)==='hovaten'||norm(c)==='hoten'));
+  if(hi<0) return null;
+  const H = rows[hi].map(norm);
+  const col = (...names)=>{ for(const n of names){ const i=H.findIndex(h=>h===n||h.startsWith(n)); if(i>=0) return i; } return -1; };
+  const c = {lane:col('lane'),name:col('hovaten','hoten'),unit:col('donvi'),year:col('namsinh'),gender:col('gioitinh'),team:col('doiso'),shift:col('thoigian','ca'),g1:col('game1'),g2:col('game2'),att:col('diemdanh','comat')};
+  if(c.team<0) return null;
+  const get=(x,k)=>c[k]>=0?String(x[c[k]]??'').replace(/ /g,' ').trim():'';
+  const clean = v => /^-?\d+\.0+$/.test(v)? v.replace(/\.0+$/,'') : v;
+  const okScore = v => { if(v==='') return ''; const n = num(v); return (n!=null && n>=0 && n<=MAXG) ? String(n) : null; };
+  const TRUE = ['x','1','co','comat','true','v','yes','y'], FALSE = ['vang','0','false','khong'];
+  rowsToPlayers.bad = 0;
+  return rows.slice(hi+1).filter(x=>get(x,'name')).map((x,i)=>{
+    const g = norm(get(x,'gender')), a = norm(get(x,'att'));
+    const att = (TRUE.includes(a)||get(x,'att')==='✓') ? true : FALSE.includes(a) ? false : undefined;
+    let g1 = okScore(clean(get(x,'g1'))), g2 = okScore(clean(get(x,'g2')));
+    if(g1===null){ g1=''; rowsToPlayers.bad++; } if(g2===null){ g2=''; rowsToPlayers.bad++; }
+    return {name:get(x,'name'),unit:get(x,'unit'),year:clean(get(x,'year')),gender:(g==='nu'||g==='f'||g==='female')?'Nữ':'Nam',team:clean(get(x,'team')),lane:clean(get(x,'lane')),shift:get(x,'shift'),g1,g2,att};
+  });
+}
+async function importFile(inp){
+  const f = inp.files[0]; if(!f) return; inp.value='';
+  try{
+    const buf = await f.arrayBuffer(); const head = new Uint8Array(buf.slice(0,4));
+    let tables;
+    if(head[0]===0x50 && head[1]===0x4B){
+      if(typeof DecompressionStream==='undefined') throw new Error('Trình duyệt quá cũ, hãy dùng Chrome/Edge bản mới.');
+      tables = await readXlsx(buf);
+    } else if(head[0]===0xD0 && head[1]===0xCF){
+      throw new Error('File .xls định dạng cũ. Hãy mở bằng Excel và lưu lại thành .xlsx rồi nhập lại.');
+    } else {
+      const text = new TextDecoder('utf-8').decode(buf);
+      tables = /<table/i.test(text) ? readHtmlTable(text) : [{name:'CSV',rows:parseCSV(text)}];
+    }
+    let list = null, from = '';
+    for(const t of tables){ const l = rowsToPlayers(t.rows); if(l&&l.length){ list=l; from=t.name; break; } }
+    if(!list) throw new Error('Không tìm thấy bảng có các cột "HỌ VÀ TÊN" và "ĐỘI SỐ".');
+    const bad = rowsToPlayers.bad||0, withScore = list.filter(p=>p.g1!==''||p.g2!=='').length;
+    if(!confirm(`Nhập ${list.length} VĐV (${new Set(list.map(p=>p.team)).size} đội) từ "${f.name}"${tables.length>1?` – trang tính "${from}"`:''}?\n${withScore?`Có ${withScore} VĐV đã có điểm GAME.\n`:''}${bad?`⚠ ${bad} ô điểm ngoài khoảng 0–${MAXG} hoặc không hợp lệ sẽ bị bỏ trống.\n`:''}Danh sách và điểm hiện tại trên hệ thống sẽ bị THAY THẾ.`)) return;
+    if(await replacePlayers(list)) toast(`Đã nhập ${list.length} VĐV.`,true);
+  }catch(e){ alert('Không nhập được: '+e.message); }
+}
+/* ---------- Xét giải ---------- */
+const TEAM_AWARDS = [['Giải Nhất','b1'],['Giải Nhì','b2'],['Giải Ba','b3'],['Giải Khuyến khích','bk'],['Giải Khuyến khích','bk'],['Giải Khuyến khích','bk'],['Giải Khuyến khích','bk'],['Giải Khuyến khích','bk']];
+const IND_AWARDS = [
+  ['Nữ','Giải Vận động viên Nữ xuất sắc nhất'],['Nữ','Giải Vận động viên Nữ bức phá'],['Nữ','Giải Vận động viên Nữ Ưu tú'],
+  ['Nam','Giải Vận động viên Nam xuất sắc nhất'],['Nam','Giải Vận động viên Nam bức phá'],['Nam','Giải Vận động viên Nam Ưu tú']];
+function tiedNote(list,i,key){
+  const v = list[i][key], same = list.filter(x=>x[key]===v).length;
+  return same>1 ? `<div class="tie">⚠ Đồng điểm với ${same-1} ${key==='tot'?'VĐV/đội':''} khác (${fmt(v)} điểm) – Ban tổ chức cần quyết định xếp hạng.</div>` : '';
+}
+function judge(silent){
+  compute(); refreshViews();
+  const out = document.getElementById('awards');
+  if(!R.teams.length && !R.ind['Nữ'].length && !R.ind['Nam'].length){ out.innerHTML = '<p class="empty">Chưa có điểm GAME nào được nhập.</p>'; showTab('award'); return; }
+  let h = '<h2 class="sec">Giải tập thể</h2><div class="grid">';
+  TEAM_AWARDS.forEach(([name,cls],i)=>{
+    const t = R.teams[i];
+    if(!t){ h += `<div class="card"><span class="badge ${cls}">${name}</span><p class="empty">Chưa đủ số đội để xét giải này</p></div>`; return; }
+    h += `<div class="card"><span class="badge ${cls}">${name}${i>3?` (${i-2})`:''}</span>
+      <h3 style="margin-top:8px">Đội số ${esc(t.team)}</h3>
+      <div class="meta">Đơn vị: ${esc(t.units.join(' / '))}</div>
+      <div class="big">${fmt(t.tot)} <span class="meta" style="font-size:12px;font-weight:400">điểm</span></div>
+      <ul class="mem">${t.members.slice().sort((a,b)=>total(b)-total(a)).map(m=>`<li class="${t.counted.has(m.id)?'':'x'}"><span>${esc(m.name)}</span><b>${absent(m)?'Vắng':hasScore(m)?fmt(total(m)):'—'}</b></li>`).join('')}</ul>
+      ${tiedNote(R.teams,i,'tot')}</div>`;
+  });
+  h += '</div><h2 class="sec">Giải cá nhân</h2><div class="grid">';
+  IND_AWARDS.forEach(([g,name],k)=>{
+    const L = R.ind[g], i = k%3, cls = ['b1','b2','b3'][i];
+    const x = L[i];
+    if(!x){ h += `<div class="card"><span class="badge ${cls}">${name}</span><p class="empty">Chưa đủ VĐV ${g} để xét giải này</p></div>`; return; }
+    h += `<div class="card"><span class="badge ${cls}">${name}</span>
+      <h3 style="margin-top:8px">${esc(x.p.name)}</h3>
+      <div class="meta">Đơn vị: ${esc(x.p.unit)} · Đội số ${esc(x.p.team)}</div>
+      <div class="big">${fmt(x.tot)} <span class="meta" style="font-size:12px;font-weight:400">điểm</span></div>
+      ${tiedNote(L.map(y=>({tot:y.tot})),i,'tot')}</div>`;
+  });
+  h += '</div>';
+  out.innerHTML = h;
+  showTab('award');
+}
+
+/* ---------- Cài đặt điểm ưu tiên ---------- */
+let tmpRules = [];
+function ruleRows(){
+  document.getElementById('rules').innerHTML = tmpRules.map((r,i)=>`<div class="rule">Sinh năm
+    <select data-i="${i}" data-k="op"><option value="<="${r.op==='<='?' selected':''}>≤ (từ năm này trở về trước)</option><option value=">="${r.op==='>='?' selected':''}>≥ (từ năm này trở về sau)</option></select>
+    <input type="number" data-i="${i}" data-k="year" value="${esc(r.year)}"> cộng +
+    <input type="number" step="any" data-i="${i}" data-k="pts" value="${esc(r.pts)}" style="width:70px">
+    <button type="button" class="sm danger" onclick="delRule(${i})">✕</button></div>`).join('') || '<p class="empty">Chưa có mức năm sinh nào.</p>';
+}
+document.addEventListener('input',e=>{ const d=e.target.dataset; if(d&&d.k&&d.i!==undefined){ tmpRules[+d.i][d.k] = d.k==='op'?e.target.value:e.target.value; } });
+document.addEventListener('change',e=>{ const d=e.target.dataset; if(d&&d.k&&d.i!==undefined) tmpRules[+d.i][d.k] = e.target.value; });
+function openCfg(){
+  document.getElementById('gNam').value = S.cfg.gender['Nam']; document.getElementById('gNu').value = S.cfg.gender['Nữ'];
+  tmpRules = JSON.parse(JSON.stringify(S.cfg.rules)); ruleRows(); document.getElementById('cfg').showModal();
+}
+function addRule(){ tmpRules.push({op:'<=',year:'',pts:''}); ruleRows(); }
+function delRule(i){ tmpRules.splice(i,1); ruleRows(); }
+function defCfg(){
+  document.getElementById('gNam').value = DEF_CFG.gender['Nam']; document.getElementById('gNu').value = DEF_CFG.gender['Nữ'];
+  tmpRules = JSON.parse(JSON.stringify(DEF_CFG.rules)); ruleRows();
+}
+async function saveCfg(){
+  const rules = [];
+  for(const r of tmpRules){
+    const y = num(r.year), p = num(r.pts);
+    if(y==null && p==null) continue;
+    if(y==null || p==null){ alert('Mỗi mức năm sinh cần nhập đủ năm và điểm cộng.'); return; }
+    rules.push({op:r.op==='>='?'>=':'<=', year:y, pts:p});
+  }
+  const ok = await safe(()=>FB.setDoc(FB.doc(db,'config','main'),{genderNam:num($('gNam').value)||0,genderNu:num($('gNu').value)||0,rules},{merge:true}));
+  if(ok){ $('cfg').close(); toast('Đã lưu cài đặt điểm ưu tiên.',true); }
+}
+
+boot();
+
+</script>
+</body>
+</html>
