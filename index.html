@@ -124,6 +124,7 @@ header .chip{background:#ffffff22;color:#fff}
       <h1>🎳 Giải Bowling</h1>
       <p>Quản lý điểm danh, nhập điểm và xếp hạng.<br>Đăng nhập bằng tài khoản Google được ban tổ chức cấp quyền.</p>
       <button class="pri gbtn" onclick="login()"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#fff" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/></svg> Đăng nhập với Google</button>
+      <p style="margin:18px 0 0"><a href="#" onclick="openPublic();return false">👁 Xem công khai (không cần đăng nhập)</a></p>
     </div>
     <div data-g="noperm" class="hide">
       <h1>Chưa được cấp quyền</h1>
@@ -140,6 +141,27 @@ header .chip{background:#ffffff22;color:#fff}
       <button onclick="location.reload()">Tải lại</button>
     </div>
   </div>
+</div>
+
+<!-- ============ XEM CÔNG KHAI (chỉ đọc) ============ -->
+<div id="pub" class="hide">
+  <header>
+    <h1>🎳 Giải Bowling – Tra cứu công khai<small id="pubUpd">Chế độ chỉ xem · không cần đăng nhập</small></h1>
+    <div class="bar"><button onclick="pubFetch()">⟳ Cập nhật</button><button class="pri" onclick="closePublic()">Đăng nhập quản lý</button></div>
+  </header>
+  <nav id="pubNav"><button data-pt="list" class="on" onclick="pubTab('list')">Tra cứu VĐV</button><button data-pt="team" class="hide" onclick="pubTab('team')">Xếp hạng đội</button><button data-pt="ind" class="hide" onclick="pubTab('ind')">Xếp hạng cá nhân</button></nav>
+  <main>
+    <div class="notice show" id="pubMsg"></div>
+    <section id="pp-list">
+      <div class="tools"><input id="pq" placeholder="Tìm tên / đơn vị / số đội…" oninput="renderPub()" style="width:260px"><select id="pft" onchange="renderPub()"></select><select id="pfs" onchange="renderPub()"></select><span class="meta" id="pubCnt"></span></div>
+      <div class="tw"><table><thead id="pubHead"></thead><tbody id="pubBody"></tbody></table></div>
+    </section>
+    <section id="pp-team" class="hide"><div class="tw"><table><thead><tr><th class="c">Hạng</th><th class="c">Đội số</th><th>Đơn vị</th><th>Danh sách VĐV</th><th class="n">Tổng điểm</th></tr></thead><tbody id="ptTb"></tbody></table></div></section>
+    <section id="pp-ind" class="hide"><div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(460px,1fr))">
+      <div><h3 class="sec">Nữ</h3><div class="tw"><table><thead><tr><th class="c">Hạng</th><th>Họ tên</th><th>Đơn vị</th><th class="c">Đội</th><th class="n">Tổng điểm</th></tr></thead><tbody id="pi-f"></tbody></table></div></div>
+      <div><h3 class="sec">Nam</h3><div class="tw"><table><thead><tr><th class="c">Hạng</th><th>Họ tên</th><th>Đơn vị</th><th class="c">Đội</th><th class="n">Tổng điểm</th></tr></thead><tbody id="pi-m"></tbody></table></div></div>
+    </div></section>
+  </main>
 </div>
 
 <!-- ============ ỨNG DỤNG ============ -->
@@ -238,6 +260,16 @@ header .chip{background:#ffffff22;color:#fff}
       <div class="tw" style="max-height:none"><table><thead><tr><th>Email</th><th>Tên / ghi chú</th><th class="c">Điểm danh</th><th class="c">Nhập điểm</th><th class="c">Admin</th><th></th></tr></thead><tbody id="rolesTb"></tbody></table></div>
     </div>
     <div class="card">
+      <h3>Chế độ xem công khai (không cần đăng nhập, chỉ xem)</h3>
+      <div class="btns" style="flex-direction:column;gap:6px;margin-bottom:8px">
+        <label><input type="radio" name="pv" value="off" onchange="setPublic('off')"> <b>Tắt</b> – chỉ người được cấp quyền mới xem được</label>
+        <label><input type="radio" name="pv" value="roster" onchange="setPublic('roster')"> <b>Chỉ danh sách</b> – tra cứu họ tên, đơn vị, đội, lane, ca thi đấu</label>
+        <label><input type="radio" name="pv" value="full" onchange="setPublic('full')"> <b>Danh sách + điểm và xếp hạng</b> – hiện cả điểm GAME, tổng điểm, xếp hạng đội/cá nhân</label>
+      </div>
+      <div class="rform" style="margin:0"><input type="text" id="pubLink" readonly style="min-width:320px"><button onclick="copyLink()">Sao chép liên kết</button></div>
+      <p class="note">Người xem công khai <b>không</b> thấy năm sinh, giới tính, SĐT, điểm ưu tiên và không sửa/xóa được gì. Dữ liệu công khai là bản sao tự cập nhật (trễ vài giây) khi có người quản lý đang mở web; người xem tự làm mới mỗi 30 giây.</p>
+    </div>
+    <div class="card">
       <h3>Dữ liệu giải đấu</h3>
       <div class="btns">
         <button class="pri" onclick="$('fc').click()" title="Nhập danh sách VĐV từ file Excel (.xlsx) hoặc .csv">Nhập danh sách (Excel / CSV)</button>
@@ -276,19 +308,18 @@ header .chip{background:#ffffff22;color:#fff}
    (Firebase Console → Project settings → Your apps → Web app → firebaseConfig)
    ===================================================================== */
 const FIREBASE_CONFIG = {
-    apiKey: "AIzaSyBThUqmyaHne9iQDInFXwZig04x3zfF7fA",
+  apiKey: "AIzaSyBThUqmyaHne9iQDInFXwZig04x3zfF7fA",
   authDomain: "bowling-778b4.firebaseapp.com",
   projectId: "bowling-778b4",
   storageBucket: "bowling-778b4.firebasestorage.app",
   messagingSenderId: "41342759951",
   appId: "1:41342759951:web:04cb367d4d99bb14b15f7a",
   measurementId: "G-XSYN7FLE98"
-
 };
 const FB_VER = '10.14.1';
 
 /* ---------- Trạng thái ---------- */
-let S = {players: [], mode: '5', cfg: null, roles: [], loaded: false};
+let S = {players: [], mode: '5', cfg: null, roles: [], loaded: false, cfgLoaded: false, fresh: false, pubMode: 'off', pubHash: '', pubKnown: false};
 let R = null;                         // kết quả tính điểm
 let ROLE = {admin:false, att:false, score:false};
 let USER = null, FB = null, db = null, auth = null;
@@ -410,14 +441,17 @@ function applyConfig(x){
   if(x && x.rules){ S.cfg = {gender:{'Nam':Number(x.genderNam)||0,'Nữ':Number(x.genderNu)||0}, rules:x.rules}; }
   else S.cfg = JSON.parse(JSON.stringify(DEF_CFG));
   S.mode = x && x.mode==='all' ? 'all' : '5';
+  S.pubMode = x && (x.publicView==='roster'||x.publicView==='full') ? x.publicView : 'off';
+  S.cfgLoaded = true;
 }
 let rq = 0;
-function scheduleRefresh(){ if(rq) return; rq = requestAnimationFrame(()=>{ rq = 0; compute(); refreshViews(); }); }
+function scheduleRefresh(){ if(rq) return; rq = requestAnimationFrame(()=>{ rq = 0; compute(); refreshViews(); schedulePublish(); }); }
 function startData(){
   if(!unsub.players){
     unsub.players = FB.onSnapshot(FB.collection(db,'players'), snap=>{
-      S.players = snap.docs.map(mapPlayer).sort((a,b)=>a.id-b.id); S.loaded = true; scheduleRefresh();
+      S.players = snap.docs.map(mapPlayer).sort((a,b)=>a.id-b.id); S.loaded = true; S.fresh = !(snap.metadata && snap.metadata.fromCache); scheduleRefresh();
     }, e=>{ console.error(e); toast(errMsg(e)); });
+    unsub.pub = FB.onSnapshot(FB.doc(db,'public','snapshot'), snap=>{ S.pubHash = snap.exists()?(snap.data().hash||''):''; S.pubKnown = true; schedulePublish(); }, e=>console.error(e));
     unsub.config = FB.onSnapshot(FB.doc(db,'config','main'), snap=>{ applyConfig(snap.exists()?snap.data():null); scheduleRefresh(); }, e=>console.error(e));
   }
   if(ROLE.admin && !unsub.roles){
@@ -428,7 +462,7 @@ function startData(){
 }
 function stopData(){
   Object.values(unsub).forEach(f=>{ try{ f(); }catch(e){} }); unsub = {};
-  S.players = []; S.roles = []; S.loaded = false;
+  S.players = []; S.roles = []; S.loaded = false; S.cfgLoaded = false; S.fresh = false; S.pubKnown = false; S.pubHash = ''; clearTimeout(pubT);
 }
 
 /* ---------- Đăng nhập & phân quyền ---------- */
@@ -438,7 +472,7 @@ function showGate(kind, extra){
   if(kind==='noperm') $('npEmail').textContent = USER?USER.email:'';
 }
 function enterApp(){
-  $('gate').classList.add('hide'); $('app').classList.remove('hide');
+  $('gate').classList.add('hide'); $('pub').classList.add('hide'); clearInterval(PUB.timer); $('app').classList.remove('hide');
   applyRoleUI(); startData(); compute(); refreshViews();
 }
 async function boot(){
@@ -456,7 +490,7 @@ async function boot(){
 }
 function onUser(user){
   if(unsub.role){ unsub.role(); delete unsub.role; }
-  if(!user){ USER = null; stopData(); ROLE = {admin:false,att:false,score:false}; showGate('login'); return; }
+  if(!user){ USER = null; stopData(); ROLE = {admin:false,att:false,score:false}; if(/[?&]xem\b/.test(location.search)) openPublic(); else showGate('login'); return; }
   USER = {email:(user.email||'').toLowerCase(), name:user.displayName||''}; bootTried = false;
   showGate('loading');
   const ref = FB.doc(db,'roles',USER.email);
@@ -649,6 +683,8 @@ async function setMode(v){ await safe(()=>FB.setDoc(FB.doc(db,'config','main'),{
 /* ---------- Quản trị: phân quyền ---------- */
 function renderAdmin(){
   if(!ROLE.admin) return;
+  document.querySelectorAll('input[name=pv]').forEach(r=>r.checked = r.value===S.pubMode);
+  $('pubLink').value = location.origin+location.pathname+'?xem=1';
   const me = USER?USER.email:'';
   $('rolesTb').innerHTML = S.roles.length ? S.roles.map(r=>`<tr data-em="${esc(r.email)}">
     <td>${esc(r.email)}${r.email===me?' <span class="chip">bạn</span>':''}</td><td>${esc(r.name||'')}</td>
@@ -726,6 +762,82 @@ function showTab(t){
   document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('hide',p.id!=='pane-'+t));
 }
 $('nav').addEventListener('click',e=>{ const t=e.target.dataset.t; if(t) showTab(t); });
+
+/* ---------- Chế độ xem công khai (không cần đăng nhập, chỉ đọc) ---------- */
+let pubT = null;
+const hashStr = str => { let h = 5381; for(let i=0;i<str.length;i++) h = ((h<<5)+h+str.charCodeAt(i))|0; return String(h>>>0)+'-'+str.length; };
+function buildPublic(){
+  const mode = S.pubMode, full = mode==='full';
+  const out = {mode, players:[], teams:[], nu:[], nam:[]};
+  if(mode==='off') return out;
+  out.players = S.players.map(p=>{
+    const o = {n:p.name,u:p.unit,t:p.team,l:p.lane,s:p.shift};
+    if(full){ const ab = absent(p); o.ab = ab; o.g1 = ab?0:num(p.g1); o.g2 = ab?0:num(p.g2); o.tot = ab?0:hasScore(p)?total(p):null; }
+    return o;
+  });
+  if(full && R){
+    out.teams = R.teams.map(t=>({rank:t.rank,team:t.team,units:t.units,names:t.members.map(m=>m.name),tot:t.tot}));
+    const mi = x=>({rank:x.rank,n:x.p.name,u:x.p.unit,t:x.p.team,tot:x.tot});
+    out.nu = R.ind['Nữ'].map(mi); out.nam = R.ind['Nam'].map(mi);
+  }
+  return out;
+}
+function schedulePublish(){
+  if(!(ROLE.admin||ROLE.att||ROLE.score) || !S.loaded || !S.cfgLoaded || !S.fresh || !S.pubKnown) return;
+  clearTimeout(pubT); pubT = setTimeout(publishNow, 2500);
+}
+async function publishNow(){
+  if(!R) compute();
+  const c = buildPublic(), h = hashStr(JSON.stringify(c));
+  if(h===S.pubHash) return;
+  S.pubHash = h;
+  try{ await FB.setDoc(FB.doc(db,'public','snapshot'),{...c,hash:h,updated:new Date().toISOString()}); }
+  catch(e){ console.error(e); S.pubHash = ''; }
+}
+async function setPublic(v){ if(await safe(()=>FB.setDoc(FB.doc(db,'config','main'),{publicView:v},{merge:true}))) toast(v==='off'?'Đã tắt chế độ xem công khai.':'Đã bật chế độ xem công khai.',true); }
+function copyLink(){ const i = $('pubLink'); i.select(); try{ navigator.clipboard.writeText(i.value); toast('Đã sao chép liên kết.',true); }catch(e){ document.execCommand('copy'); toast('Đã sao chép liên kết.',true); } }
+
+let PUB = {doc:null, tab:'list', timer:null, err:false};
+function openPublic(){
+  $('gate').classList.add('hide'); $('app').classList.add('hide'); $('pub').classList.remove('hide');
+  clearInterval(PUB.timer); PUB.timer = setInterval(()=>{ if(!document.hidden) pubFetch(); },30000);
+  pubFetch();
+}
+function closePublic(){
+  clearInterval(PUB.timer); $('pub').classList.add('hide');
+  history.replaceState(null,'',location.pathname); showGate('login');
+}
+async function pubFetch(){
+  try{ const s = await FB.getDoc(FB.doc(db,'public','snapshot')); PUB.doc = s.exists()?s.data():null; PUB.err = false; }
+  catch(e){ console.error(e); PUB.err = true; }
+  renderPub();
+}
+function pubTab(t){ PUB.tab = t; renderPub(); }
+function renderPub(){
+  const d = PUB.doc, on = d && d.mode && d.mode!=='off', full = on && d.mode==='full';
+  const t = PUB.tab==='team'&&full ? 'team' : PUB.tab==='ind'&&full ? 'ind' : 'list'; PUB.tab = t;
+  document.querySelectorAll('#pubNav button').forEach(b=>{ b.classList.toggle('on',b.dataset.pt===t); if(b.dataset.pt!=='list') b.classList.toggle('hide',!full); });
+  $('pubMsg').innerHTML = PUB.err ? 'Không tải được dữ liệu. Hãy kiểm tra kết nối mạng rồi bấm Cập nhật.' : !d ? 'Chưa có dữ liệu công khai.' : !on ? 'Ban tổ chức chưa mở chế độ xem công khai.' : '';
+  $('pubMsg').classList.toggle('hide',!$('pubMsg').innerHTML);
+  $('pubUpd').textContent = d&&d.updated ? 'Cập nhật lúc '+new Date(d.updated).toLocaleTimeString('vi-VN') : '';
+  ['list','team','ind'].forEach(k=>$('pp-'+k).classList.toggle('hide',!(on&&k===t)));
+  if(!on) return;
+  const P = d.players||[];
+  const teams = [...new Set(P.map(p=>String(p.t)))].filter(Boolean).sort((a,b)=>a-b), shifts = [...new Set(P.map(p=>p.s))].filter(Boolean).sort();
+  fillSel('pft','Tất cả đội',teams,x=>'Đội '+esc(x)); fillSel('pfs','Tất cả ca',shifts,x=>'Ca '+esc(x.replace('g',':')));
+  if(t==='list'){
+    const q = norm($('pq').value.trim()), ft = $('pft').value, fs = $('pfs').value;
+    const L = P.filter(p=>(!ft||String(p.t)===ft)&&(!fs||p.s===fs)&&(!q||norm(p.n+' '+p.u+' doi '+p.t).includes(q)));
+    $('pubHead').innerHTML = '<tr><th class="c">STT</th><th>Họ và tên</th><th>Đơn vị</th><th class="c">Đội</th><th class="c">Lane</th><th class="c">Ca</th>'+(full?'<th class="n">GAME 1</th><th class="n">GAME 2</th><th class="n">Tổng điểm</th>':'')+'</tr>';
+    $('pubBody').innerHTML = L.length ? L.map((p,i)=>`<tr${p.ab?' class="abs"':''}><td class="c">${P.indexOf(p)+1}</td><td class="name">${esc(p.n)}</td><td>${esc(p.u)}</td><td class="c"><b>${esc(p.t)}</b></td><td class="c">${esc(p.l)}</td><td class="c">${esc((p.s||'').replace('g',':'))}</td>`+
+      (full?(p.ab?'<td class="n" colspan="3"><span class="vang">Vắng</span></td>':`<td class="n">${p.g1??'—'}</td><td class="n">${p.g2??'—'}</td><td class="n"><b class="tot">${p.tot==null?'—':fmt(p.tot)}</b></td>`):'')+'</tr>').join('') : '<tr><td colspan="9" class="empty">Không tìm thấy vận động viên phù hợp.</td></tr>';
+    $('pubCnt').textContent = `${L.length}/${P.length} VĐV`;
+  } else if(t==='team'){
+    $('ptTb').innerHTML = (d.teams||[]).length ? d.teams.map(x=>`<tr><td class="c">${rk(x.rank)}</td><td class="c"><b>${esc(x.team)}</b></td><td>${esc((x.units||[]).join(' / '))}</td><td style="white-space:normal">${(x.names||[]).map(esc).join(', ')}</td><td class="n"><b class="tot">${fmt(x.tot)}</b></td></tr>`).join('') : '<tr><td colspan="5" class="empty">Chưa có điểm</td></tr>';
+  } else {
+    [['nu','pi-f'],['nam','pi-m']].forEach(([k,id])=>{ $(id).innerHTML = (d[k]||[]).length ? d[k].map(x=>`<tr><td class="c">${rk(x.rank)}</td><td>${esc(x.n)}</td><td>${esc(x.u)}</td><td class="c">${esc(x.t)}</td><td class="n"><b class="tot">${fmt(x.tot)}</b></td></tr>`).join('') : '<tr><td colspan="5" class="empty">Chưa có điểm</td></tr>'; });
+  }
+}
 /* ---------- Nhập CSV ---------- */
 function parseCSV(text){
   text = text.replace(/^\uFEFF/,'');
