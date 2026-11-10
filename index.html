@@ -266,8 +266,9 @@ header .chip{background:#ffffff22;color:#fff}
         <label><input type="radio" name="pv" value="roster" onchange="setPublic('roster')"> <b>Chỉ danh sách</b> – tra cứu họ tên, đơn vị, đội, lane, ca thi đấu</label>
         <label><input type="radio" name="pv" value="full" onchange="setPublic('full')"> <b>Danh sách + điểm và xếp hạng</b> – hiện cả điểm GAME, tổng điểm, xếp hạng đội/cá nhân</label>
       </div>
-      <div class="rform" style="margin:0"><input type="text" id="pubLink" readonly style="min-width:320px"><button onclick="copyLink()">Sao chép liên kết</button></div>
-      <p class="note">Người xem công khai <b>không</b> thấy năm sinh, giới tính, SĐT, điểm ưu tiên và không sửa/xóa được gì. Dữ liệu công khai là bản sao tự cập nhật (trễ vài giây) khi có người quản lý đang mở web; người xem tự làm mới mỗi 30 giây.</p>
+      <div class="rform" style="margin:0"><input type="text" id="pubLink" readonly style="min-width:320px"><button onclick="copyLink()">Sao chép liên kết</button><button onclick="forcePublish()">⟳ Cập nhật dữ liệu công khai ngay</button></div>
+      <p class="note" id="pubStat" style="margin-bottom:0"></p>
+      <p class="note">Người xem công khai <b>không</b> thấy năm sinh, giới tính, SĐT, điểm ưu tiên và không sửa/xóa được gì. Dữ liệu công khai là bản sao tự cập nhật (trễ vài giây) <b>khi có người quản lý đang mở web</b> (hãy để tab này mở); người xem tự làm mới mỗi 30 giây.</p>
     </div>
     <div class="card">
       <h3>Dữ liệu giải đấu</h3>
@@ -448,10 +449,10 @@ let rq = 0;
 function scheduleRefresh(){ if(rq) return; rq = requestAnimationFrame(()=>{ rq = 0; compute(); refreshViews(); schedulePublish(); }); }
 function startData(){
   if(!unsub.players){
-    unsub.players = FB.onSnapshot(FB.collection(db,'players'), snap=>{
+    unsub.players = FB.onSnapshot(FB.collection(db,'players'), {includeMetadataChanges:true}, snap=>{
       S.players = snap.docs.map(mapPlayer).sort((a,b)=>a.id-b.id); S.loaded = true; S.fresh = !(snap.metadata && snap.metadata.fromCache); scheduleRefresh();
     }, e=>{ console.error(e); toast(errMsg(e)); });
-    unsub.pub = FB.onSnapshot(FB.doc(db,'public','snapshot'), snap=>{ S.pubHash = snap.exists()?(snap.data().hash||''):''; S.pubKnown = true; schedulePublish(); }, e=>console.error(e));
+    unsub.pub = FB.onSnapshot(FB.doc(db,'public','snapshot'), snap=>{ const d = snap.exists()?snap.data():null; S.pubHash = d?(d.hash||''):''; S.pubInfo = d?{mode:d.mode,updated:d.updated}:null; S.pubKnown = true; renderAdmin(); schedulePublish(); }, e=>console.error(e));
     unsub.config = FB.onSnapshot(FB.doc(db,'config','main'), snap=>{ applyConfig(snap.exists()?snap.data():null); scheduleRefresh(); }, e=>console.error(e));
   }
   if(ROLE.admin && !unsub.roles){
@@ -685,6 +686,8 @@ function renderAdmin(){
   if(!ROLE.admin) return;
   document.querySelectorAll('input[name=pv]').forEach(r=>r.checked = r.value===S.pubMode);
   $('pubLink').value = location.origin+location.pathname+'?xem=1';
+  const pi = S.pubInfo, ML = {off:'Tắt',roster:'Chỉ danh sách',full:'Danh sách + điểm'};
+  $('pubStat').textContent = pi ? `Bản công khai hiện tại: ${ML[pi.mode]||pi.mode} · cập nhật lúc ${pi.updated?new Date(pi.updated).toLocaleTimeString('vi-VN'):'?'}` + (pi.mode!==S.pubMode?' · ⚠ chưa khớp với lựa chọn ở trên, đang chờ cập nhật…':'') : 'Chưa có bản công khai nào.';
   const me = USER?USER.email:'';
   $('rolesTb').innerHTML = S.roles.length ? S.roles.map(r=>`<tr data-em="${esc(r.email)}">
     <td>${esc(r.email)}${r.email===me?' <span class="chip">bạn</span>':''}</td><td>${esc(r.name||'')}</td>
@@ -789,10 +792,15 @@ function schedulePublish(){
 async function publishNow(){
   if(!R) compute();
   const c = buildPublic(), h = hashStr(JSON.stringify(c));
-  if(h===S.pubHash) return;
+  if(h===S.pubHash) return true;
   S.pubHash = h;
-  try{ await FB.setDoc(FB.doc(db,'public','snapshot'),{...c,hash:h,updated:new Date().toISOString()}); }
-  catch(e){ console.error(e); S.pubHash = ''; }
+  try{ await FB.setDoc(FB.doc(db,'public','snapshot'),{...c,hash:h,updated:new Date().toISOString()}); return true; }
+  catch(e){ console.error(e); S.pubHash = ''; if(ROLE.admin) toast('Không cập nhật được bản công khai: '+errMsg(e)+' (kiểm tra Rules đã có phần "public" chưa).'); return false; }
+}
+async function forcePublish(){
+  if(!S.loaded || !S.cfgLoaded){ toast('Dữ liệu chưa tải xong, thử lại sau vài giây.'); return; }
+  compute(); S.pubHash = '';
+  if(await publishNow()) toast('Đã cập nhật dữ liệu công khai.',true);
 }
 async function setPublic(v){ if(await safe(()=>FB.setDoc(FB.doc(db,'config','main'),{publicView:v},{merge:true}))) toast(v==='off'?'Đã tắt chế độ xem công khai.':'Đã bật chế độ xem công khai.',true); }
 function copyLink(){ const i = $('pubLink'); i.select(); try{ navigator.clipboard.writeText(i.value); toast('Đã sao chép liên kết.',true); }catch(e){ document.execCommand('copy'); toast('Đã sao chép liên kết.',true); } }
