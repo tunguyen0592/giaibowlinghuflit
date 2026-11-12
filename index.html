@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Giải Bowling – Quản lý thi đấu</title>
+<title>Giải Bowling NLĐ HUFLIT – Quản lý thi đấu</title>
 <style>
 :root{--bg:#f4f6fa;--card:#fff;--ink:#1c2433;--mut:#667085;--line:#dde3ec;--pri:#0b5ed7;--pri2:#e7f0ff;--ok:#12805c;--warn:#b54708;--warnbg:#fff4e5;--gold:#f5b301;--silver:#98a2b3;--bronze:#c2763a;--head:#17233d}
 *{box-sizing:border-box}
@@ -124,6 +124,10 @@ header .chip{background:#ffffff22;color:#fff}
       <h1>🎳 Giải Bowling</h1>
       <p>Quản lý điểm danh, nhập điểm và xếp hạng.<br>Đăng nhập bằng tài khoản Google được ban tổ chức cấp quyền.</p>
       <button class="pri gbtn" onclick="login()"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#fff" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/></svg> Đăng nhập với Google</button>
+      <div id="inappWarn" class="hide" style="margin:14px 0;padding:10px 12px;background:#fff4ce;border:1px solid #d9b44a;border-radius:8px;text-align:left;font-size:14px">
+        <b>⚠ Không đăng nhập được trong Zalo / Facebook.</b><br>Google không cho đăng nhập trong trình duyệt của ứng dụng này. Hãy mở liên kết bằng <b>Chrome</b> hoặc <b>Safari</b>: bấm nút <b>⋯</b> (góc phải) → <i>Mở bằng trình duyệt</i>, hoặc sao chép liên kết rồi dán vào trình duyệt.
+        <div style="margin-top:8px"><button onclick="copyAppLink()">📋 Sao chép liên kết</button></div>
+      </div>
       <p style="margin:18px 0 0"><a href="#" onclick="openPublic();return false">👁 Xem công khai (không cần đăng nhập)</a></p>
     </div>
     <div data-g="noperm" class="hide">
@@ -146,10 +150,10 @@ header .chip{background:#ffffff22;color:#fff}
 <!-- ============ XEM CÔNG KHAI (chỉ đọc) ============ -->
 <div id="pub" class="hide">
   <header>
-    <h1>🎳 Giải Bowling – Tra cứu công khai<small id="pubUpd">Chế độ chỉ xem · không cần đăng nhập</small></h1>
+    <h1>🎳 Giải Bowling NLĐ HUFLIT – Xem thông tin giải đấu<small id="pubUpd">Chế độ chỉ xem · không cần đăng nhập</small></h1>
     <div class="bar"><button onclick="pubFetch()">⟳ Cập nhật</button><button class="pri" onclick="closePublic()">Đăng nhập quản lý</button></div>
   </header>
-  <nav id="pubNav"><button data-pt="list" class="on" onclick="pubTab('list')">Tra cứu VĐV</button><button data-pt="team" class="hide" onclick="pubTab('team')">Xếp hạng đội</button><button data-pt="ind" class="hide" onclick="pubTab('ind')">Xếp hạng cá nhân</button></nav>
+  <nav id="pubNav"><button data-pt="list" class="on" onclick="pubTab('list')">Tra cứu VĐV</button><button data-pt="score" class="hide" onclick="pubTab('score')">Bảng điểm</button><button data-pt="team" class="hide" onclick="pubTab('team')">Xếp hạng đội</button><button data-pt="ind" class="hide" onclick="pubTab('ind')">Xếp hạng cá nhân</button></nav>
   <main>
     <div class="notice show" id="pubMsg"></div>
     <section id="pp-list">
@@ -167,7 +171,7 @@ header .chip{background:#ffffff22;color:#fff}
 <!-- ============ ỨNG DỤNG ============ -->
 <div id="app" class="hide">
 <header>
-  <h1>🎳 Giải Bowling – Quản lý thi đấu<small>Dữ liệu đồng bộ trực tuyến (Firebase)</small></h1>
+  <h1>🎳 Giải Bowling NLĐ HUFLIT – Quản lý thi đấu<small>Dữ liệu đồng bộ trực tuyến (Firebase)</small></h1>
   <div class="bar">
     <button class="pri score-only" onclick="calc(true)">Tính điểm</button>
     <button class="gold score-only" onclick="judge()">🏆 XÉT GIẢI</button>
@@ -263,8 +267,9 @@ header .chip{background:#ffffff22;color:#fff}
       <h3>Chế độ xem công khai (không cần đăng nhập, chỉ xem)</h3>
       <div class="btns" style="flex-direction:column;gap:6px;margin-bottom:8px">
         <label><input type="radio" name="pv" value="off" onchange="setPublic('off')"> <b>Tắt</b> – chỉ người được cấp quyền mới xem được</label>
-        <label><input type="radio" name="pv" value="roster" onchange="setPublic('roster')"> <b>Chỉ danh sách</b> – tra cứu họ tên, đơn vị, đội, lane, ca thi đấu</label>
-        <label><input type="radio" name="pv" value="full" onchange="setPublic('full')"> <b>Danh sách + điểm và xếp hạng</b> – hiện cả điểm GAME, tổng điểm, xếp hạng đội/cá nhân</label>
+        <label><input type="radio" name="pv" value="roster" onchange="setPublic('roster')"> <b>Bật</b> – tra cứu họ tên, đơn vị, đội, lane, ca thi đấu</label>
+        <label style="margin-left:26px"><input type="checkbox" id="pubSc" onchange="setPubOpt('pubScores',this.checked)"> Công khai <b>bảng điểm</b> (điểm GAME 1, GAME 2, tổng điểm của từng VĐV)</label>
+        <label style="margin-left:26px"><input type="checkbox" id="pubRk" onchange="setPubOpt('pubRank',this.checked)"> Công khai <b>xếp hạng</b> (đồng đội và cá nhân)</label>
       </div>
       <div class="rform" style="margin:0"><input type="text" id="pubLink" readonly style="min-width:320px"><button onclick="copyLink()">Sao chép liên kết</button><button onclick="forcePublish()">⟳ Cập nhật dữ liệu công khai ngay</button></div>
       <p class="note" id="pubStat" style="margin-bottom:0"></p>
@@ -442,7 +447,10 @@ function applyConfig(x){
   if(x && x.rules){ S.cfg = {gender:{'Nam':Number(x.genderNam)||0,'Nữ':Number(x.genderNu)||0}, rules:x.rules}; }
   else S.cfg = JSON.parse(JSON.stringify(DEF_CFG));
   S.mode = x && x.mode==='all' ? 'all' : '5';
-  S.pubMode = x && (x.publicView==='roster'||x.publicView==='full') ? x.publicView : 'off';
+  const pv = x && x.publicView, legacy = pv==='full';
+  S.pubMode = (pv==='roster'||legacy) ? 'roster' : 'off';
+  S.pubSc = S.pubMode!=='off' && (x.pubScores!==undefined ? !!x.pubScores : legacy);
+  S.pubRk = S.pubMode!=='off' && (x.pubRank!==undefined ? !!x.pubRank : legacy);
   S.cfgLoaded = true;
 }
 let rq = 0;
@@ -508,7 +516,15 @@ function onUser(user){
     enterApp();
   }, e=>{ console.error(e); showGate('noperm'); });
 }
+const IN_APP = /Zalo|FBAN|FBAV|FB_IAB|Messenger|Instagram|Line\/|MicroMessenger|; wv\)/i.test(navigator.userAgent);
+function copyAppLink(){
+  const u=location.href.split('#')[0];
+  const done=()=>toast('Đã sao chép liên kết. Hãy dán vào Chrome / Safari.',true);
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(u).then(done,()=>prompt('Sao chép liên kết:',u));
+  else prompt('Sao chép liên kết:',u);
+}
 async function login(){
+  if(IN_APP){ const w=document.getElementById('inappWarn'); if(w){ w.classList.remove('hide'); w.scrollIntoView({block:'center'}); } return; }
   try{
     const prov = new FB.GoogleAuthProvider(); prov.setCustomParameters({prompt:'select_account'});
     await FB.signInWithPopup(auth, prov);
@@ -516,6 +532,7 @@ async function login(){
     console.error(e);
     if(e && (e.code==='auth/popup-blocked' || e.code==='auth/cancelled-popup-request' )){ try{ await FB.signInWithRedirect(auth,new FB.GoogleAuthProvider()); }catch(_){} }
     else if(e && e.code==='auth/unauthorized-domain') alert('Tên miền này chưa được thêm vào Firebase → Authentication → Settings → Authorized domains.');
+    else if(e && e.code==='auth/web-storage-unsupported'){ const w=document.getElementById('inappWarn'); if(w) w.classList.remove('hide'); }
     else if(!e || e.code!=='auth/popup-closed-by-user') alert('Đăng nhập không thành công: '+(e&&e.message||e));
   }
 }
@@ -685,9 +702,11 @@ async function setMode(v){ await safe(()=>FB.setDoc(FB.doc(db,'config','main'),{
 function renderAdmin(){
   if(!ROLE.admin) return;
   document.querySelectorAll('input[name=pv]').forEach(r=>r.checked = r.value===S.pubMode);
+  $('pubSc').checked = S.pubSc; $('pubRk').checked = S.pubRk; $('pubSc').disabled = $('pubRk').disabled = S.pubMode==='off';
   $('pubLink').value = location.origin+location.pathname+'?xem=1';
-  const pi = S.pubInfo, ML = {off:'Tắt',roster:'Chỉ danh sách',full:'Danh sách + điểm'};
-  $('pubStat').textContent = pi ? `Bản công khai hiện tại: ${ML[pi.mode]||pi.mode} · cập nhật lúc ${pi.updated?new Date(pi.updated).toLocaleTimeString('vi-VN'):'?'}` + (pi.mode!==S.pubMode?' · ⚠ chưa khớp với lựa chọn ở trên, đang chờ cập nhật…':'') : 'Chưa có bản công khai nào.';
+  const pi = S.pubInfo, piSc = pi&&(pi.sc||pi.mode==='full'), piRk = pi&&(pi.rk||pi.mode==='full');
+  const ML = m=>m==='off'?'Tắt':'Danh sách'+(piSc?' + điểm':'')+(piRk?' + xếp hạng':'');
+  $('pubStat').textContent = pi ? `Bản công khai hiện tại: ${ML(pi.mode)} · cập nhật lúc ${pi.updated?new Date(pi.updated).toLocaleTimeString('vi-VN'):'?'}` + ((pi.mode==='full'?'roster':pi.mode)!==S.pubMode||!!piSc!==S.pubSc||!!piRk!==S.pubRk?' · ⚠ chưa khớp với lựa chọn ở trên, đang chờ cập nhật…':'') : 'Chưa có bản công khai nào.';
   const me = USER?USER.email:'';
   $('rolesTb').innerHTML = S.roles.length ? S.roles.map(r=>`<tr data-em="${esc(r.email)}">
     <td>${esc(r.email)}${r.email===me?' <span class="chip">bạn</span>':''}</td><td>${esc(r.name||'')}</td>
@@ -770,15 +789,15 @@ $('nav').addEventListener('click',e=>{ const t=e.target.dataset.t; if(t) showTab
 let pubT = null;
 const hashStr = str => { let h = 5381; for(let i=0;i<str.length;i++) h = ((h<<5)+h+str.charCodeAt(i))|0; return String(h>>>0)+'-'+str.length; };
 function buildPublic(){
-  const mode = S.pubMode, full = mode==='full';
-  const out = {mode, players:[], teams:[], nu:[], nam:[]};
+  const mode = S.pubMode, sc = mode!=='off' && S.pubSc, rkk = mode!=='off' && S.pubRk;
+  const out = {mode, sc, rk:rkk, players:[], teams:[], nu:[], nam:[]};
   if(mode==='off') return out;
   out.players = S.players.map(p=>{
     const o = {n:p.name,u:p.unit,t:p.team,l:p.lane,s:p.shift};
-    if(full){ const ab = absent(p); o.ab = ab; o.g1 = ab?0:num(p.g1); o.g2 = ab?0:num(p.g2); o.tot = ab?0:hasScore(p)?total(p):null; }
+    if(sc){ const ab = absent(p); o.ab = ab; o.g1 = ab?0:num(p.g1); o.g2 = ab?0:num(p.g2); o.tot = ab?0:hasScore(p)?total(p):null; }
     return o;
   });
-  if(full && R){
+  if(rkk && R){
     out.teams = R.teams.map(t=>({rank:t.rank,team:t.team,units:t.units,names:t.members.map(m=>m.name),tot:t.tot}));
     const mi = x=>({rank:x.rank,n:x.p.name,u:x.p.unit,t:x.p.team,tot:x.tot});
     out.nu = R.ind['Nữ'].map(mi); out.nam = R.ind['Nam'].map(mi);
@@ -803,6 +822,7 @@ async function forcePublish(){
   if(await publishNow()) toast('Đã cập nhật dữ liệu công khai.',true);
 }
 async function setPublic(v){ if(await safe(()=>FB.setDoc(FB.doc(db,'config','main'),{publicView:v},{merge:true}))) toast(v==='off'?'Đã tắt chế độ xem công khai.':'Đã bật chế độ xem công khai.',true); }
+async function setPubOpt(k,v){ await safe(()=>FB.setDoc(FB.doc(db,'config','main'),{publicView:S.pubMode==='off'?'roster':S.pubMode,[k]:!!v},{merge:true})); }
 function copyLink(){ const i = $('pubLink'); i.select(); try{ navigator.clipboard.writeText(i.value); toast('Đã sao chép liên kết.',true); }catch(e){ document.execCommand('copy'); toast('Đã sao chép liên kết.',true); } }
 
 let PUB = {doc:null, tab:'list', timer:null, err:false};
@@ -822,22 +842,24 @@ async function pubFetch(){
 }
 function pubTab(t){ PUB.tab = t; renderPub(); }
 function renderPub(){
-  const d = PUB.doc, on = d && d.mode && d.mode!=='off', full = on && d.mode==='full';
-  const t = PUB.tab==='team'&&full ? 'team' : PUB.tab==='ind'&&full ? 'ind' : 'list'; PUB.tab = t;
-  document.querySelectorAll('#pubNav button').forEach(b=>{ b.classList.toggle('on',b.dataset.pt===t); if(b.dataset.pt!=='list') b.classList.toggle('hide',!full); });
+  const d = PUB.doc, on = d && d.mode && d.mode!=='off', legacy = on && d.mode==='full';
+  const sc = on && (d.sc || legacy), rkk = on && (d.rk || legacy);
+  const t = PUB.tab==='score'&&sc ? 'score' : PUB.tab==='team'&&rkk ? 'team' : PUB.tab==='ind'&&rkk ? 'ind' : 'list'; PUB.tab = t;
+  document.querySelectorAll('#pubNav button').forEach(b=>{ const k=b.dataset.pt; b.classList.toggle('on',k===t); if(k!=='list') b.classList.toggle('hide',!(k==='score'?sc:rkk)); });
   $('pubMsg').innerHTML = PUB.err ? 'Không tải được dữ liệu. Hãy kiểm tra kết nối mạng rồi bấm Cập nhật.' : !d ? 'Chưa có dữ liệu công khai.' : !on ? 'Ban tổ chức chưa mở chế độ xem công khai.' : '';
   $('pubMsg').classList.toggle('hide',!$('pubMsg').innerHTML);
   $('pubUpd').textContent = d&&d.updated ? 'Cập nhật lúc '+new Date(d.updated).toLocaleTimeString('vi-VN') : '';
-  ['list','team','ind'].forEach(k=>$('pp-'+k).classList.toggle('hide',!(on&&k===t)));
+  ['list','team','ind'].forEach(k=>$('pp-'+k).classList.toggle('hide',!(on&&(k===t||(k==='list'&&t==='score')))));
   if(!on) return;
   const P = d.players||[];
   const teams = [...new Set(P.map(p=>String(p.t)))].filter(Boolean).sort((a,b)=>a-b), shifts = [...new Set(P.map(p=>p.s))].filter(Boolean).sort();
   fillSel('pft','Tất cả đội',teams,x=>'Đội '+esc(x)); fillSel('pfs','Tất cả ca',shifts,x=>'Ca '+esc(x.replace('g',':')));
-  if(t==='list'){
+  if(t==='list'||t==='score'){
+    const full = t==='score';
     const q = norm($('pq').value.trim()), ft = $('pft').value, fs = $('pfs').value;
     const L = P.filter(p=>(!ft||String(p.t)===ft)&&(!fs||p.s===fs)&&(!q||norm(p.n+' '+p.u+' doi '+p.t).includes(q)));
-    $('pubHead').innerHTML = '<tr><th class="c">STT</th><th>Họ và tên</th><th>Đơn vị</th><th class="c">Đội</th><th class="c">Lane</th><th class="c">Ca</th>'+(full?'<th class="n">GAME 1</th><th class="n">GAME 2</th><th class="n">Tổng điểm</th>':'')+'</tr>';
-    $('pubBody').innerHTML = L.length ? L.map((p,i)=>`<tr${p.ab?' class="abs"':''}><td class="c">${P.indexOf(p)+1}</td><td class="name">${esc(p.n)}</td><td>${esc(p.u)}</td><td class="c"><b>${esc(p.t)}</b></td><td class="c">${esc(p.l)}</td><td class="c">${esc((p.s||'').replace('g',':'))}</td>`+
+    $('pubHead').innerHTML = '<tr><th class="c">STT</th><th>Họ và tên</th><th>Đơn vị</th><th class="c">Đội</th>'+(full?'':'<th class="c">Lane</th><th class="c">Ca</th>')+(full?'<th class="n">GAME 1</th><th class="n">GAME 2</th><th class="n">Tổng điểm</th>':'')+'</tr>';
+    $('pubBody').innerHTML = L.length ? L.map((p,i)=>`<tr${p.ab?' class="abs"':''}><td class="c">${P.indexOf(p)+1}</td><td class="name">${esc(p.n)}</td><td>${esc(p.u)}</td><td class="c"><b>${esc(p.t)}</b></td>`+(full?'':`<td class="c">${esc(p.l)}</td><td class="c">${esc((p.s||'').replace('g',':'))}</td>`)+
       (full?(p.ab?'<td class="n" colspan="3"><span class="vang">Vắng</span></td>':`<td class="n">${p.g1??'—'}</td><td class="n">${p.g2??'—'}</td><td class="n"><b class="tot">${p.tot==null?'—':fmt(p.tot)}</b></td>`):'')+'</tr>').join('') : '<tr><td colspan="9" class="empty">Không tìm thấy vận động viên phù hợp.</td></tr>';
     $('pubCnt').textContent = `${L.length}/${P.length} VĐV`;
   } else if(t==='team'){
